@@ -7,7 +7,7 @@ join user u on o.userid=u.UserID
 join teamnames t on o.teamid=t.teamid and t.season=o.season
 left join config c on c.key=concat('draft.login.', u.userid)
 left join config c2 on c2.key=concat('draft.team.', t.teamid)
-where o.season=2018
+where o.season=$currentSeason
 order by t.name";
 
 $results = mysqli_query($conn, $query) or die("Unable to do query: " . mysqli_error($conn));

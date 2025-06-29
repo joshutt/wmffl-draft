@@ -241,15 +241,15 @@ $url = $urlInfo['value'];
                         <div class="card-body">
                             <div id="teamAbb" class="text-center">
                             <a onClick="displayRoster('2')" class="teamRoster">AE</a> -
+                            <a onClick="displayRoster('4')" class="teamRoster">ANJ</a> -
+                            <a onClick="displayRoster('1')" class="teamRoster">BB</a> -
                             <a onClick="displayRoster('6')" class="teamRoster">CRU</a> -
-                            <a onClick="displayRoster('1')" class="teamRoster">FBB</a> -
-                            <a onClick="displayRoster('8')" class="teamRoster">FS</a> -
                             <a onClick="displayRoster('9')" class="teamRoster">GW</a> -
                             <a onClick="displayRoster('7')" class="teamRoster">MM</a> -
                             <a onClick="displayRoster('3')" class="teamRoster">NOR</a> -
-                            <a onClick="displayRoster('5')" class="teamRoster">SOB</a> -
-                            <a onClick="displayRoster('4')" class="teamRoster">STA</a> -
                             <a onClick="displayRoster('12')" class="teamRoster">RL</a> -
+                            <a onClick="displayRoster('8')" class="teamRoster">SB</a> -
+                            <a onClick="displayRoster('5')" class="teamRoster">SOB</a> -
                             <a onClick="displayRoster('13')" class="teamRoster">TR</a> -
                             <a onClick="displayRoster('10')" class="teamRoster">TMC</a>
                             </div>
