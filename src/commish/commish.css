@@ -1,0 +1,24 @@
+.button {
+    background: #aaa;
+    color: black;
+    padding: 1em;
+    margin: 10px;
+    float: left;
+    cursor: pointer;
+}
+
+
+.item {
+    float: left;
+    padding: 5px;
+    margin: 5px 20px;
+    border: 1px solid;
+}
+
+#clock, #team, .highlight {
+    font-size: 20pt;
+    font-weight: bold;
+    text-align: center;
+    padding-right: 5%;
+    float: center;
+}

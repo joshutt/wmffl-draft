@@ -1,0 +1,23 @@
+# Fix the values as needed and rename to wmffl.conf
+[DB_Values]
+dbName=
+userName=
+password=
+
+[Paths]
+libPath=
+wwwPath =
+imagesPath =
+tmpPath =
+erorLog =
+pearPath =
+pyInjPath =
+injEnvDir =
+scriptsPath =
+
+[DB_DataObject]
+database =
+schema_location   =
+class_location    =
+require_prefix    =
+class_prefix      =

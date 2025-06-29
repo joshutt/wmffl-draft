@@ -1,0 +1,417 @@
+body {
+    color: #660000;
+    font-family: Verdana;
+    background-color: #FFFFFF;
+    border: 0px none;
+}
+
+h1, h2, h3, h4 { text-align: center; margin-bottom: 0px; }
+
+caption {
+    font-size: 120%;
+    font-weight: bold;
+}
+
+
+th {
+    background-color: #660000;
+    color: #e2a500;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 8pt;
+}
+
+
+.report,
+.playoffbracket,
+.homepagemessage {
+    margin-bottom: 1em;
+}
+
+.eventablerow {
+    background-color: #dddddd;
+}
+
+#body_ajax_ld .report {
+    width: 100%;
+}
+
+#body_ajax_ld .draft_picks_header {
+    margin-bottom: 0pt;
+    margin-left: 0px;
+    width: 100%;
+}
+
+#body_ajax_ld td .report {
+    width: 100%;
+}
+
+#body_ajax_ld .pick {
+    width: 10%;
+    text-align: center;
+    font-size: 8pt;
+    white-space: nowrap;
+}
+
+#body_ajax_ld .round {
+    width: 10%;
+    text-align: center;
+    font-size: 8pt;
+    white-space: nowrap;
+}
+#body_ajax_ld .franchise {
+    width: 35%;
+    font-size: 8pt;
+    white-space: nowrap;
+}
+#body_ajax_ld .selection {
+    width: 45%;
+    font-size: 8pt;
+    white-space: nowrap;
+}
+#body_ajax_ld .timestamp {
+    width: 15%;
+    font-size: 8pt;
+    white-space: nowrap;
+}
+
+#body_ajax_ld .pos {
+    width: 10%;
+    font-size: 8pt;
+    white-space: nowrap;
+}
+
+#body_ajax_ld .player {
+    width: 70%;
+    font-size: 8pt;
+    white-space: nowrap;
+}
+#body_ajax_ld .team {
+    width: 10%;
+    font-size: 8pt;
+    white-space: nowrap;
+}
+#body_ajax_ld .bye {
+    width: 10%;
+    font-size: 8pt;
+    white-space: nowrap;
+}
+
+#body_ajax_ld .byName {
+    width: 15%;
+    font-size: 8pt;
+    white-space: nowrap;
+}
+#body_ajax_ld .message {
+    width: 85%;
+    font-size: 8pt;
+}
+
+.league {
+    color: #ff0000;
+}
+
+#body_ajax_ld {
+    font-size: 8pt;
+    white-space: nowrap;
+}
+
+.draft_picks_container {
+    height: 500px;
+    overflow: auto;
+    vertical-align: top;
+    width: 100%
+}
+
+#right_side {
+    padding: 10px;
+    float: left;
+    //width: 30%;
+    margin: 0px 5px;
+}
+
+#left_side {
+    float: left;
+    width: 30%;
+    height: 96%;
+}
+
+
+.pickLabel {
+    font-weight: bold;
+}
+
+.clockLine {
+    font-size: 20pt;
+    font-weight: bold;
+    text-align: center;
+    padding-right: 5%;
+    float: left;
+}
+
+a.tools {
+    color: #660000;
+    font-weight: bold;
+    text-decoration: none;
+    text-align: center;
+    float: right;
+}
+
+a.tools:hover {
+    color: #e2a500;
+}
+
+a.teamRoster {
+    color: #660000;
+    font-weight: bold;
+    text-decoration: none;
+    text-align: center;
+}
+
+a.teamRoster:hover {
+    color: #e2a500;
+}
+
+#statusTable {
+    width: 100%;
+    border: 1px solid;
+    overflow: hidden;
+    padding: 0px 0px 2px 5px;
+}
+
+#logInInfo, #logOutInfo {
+    display: none;
+}
+
+#rosterTeam {
+    height: 8px;
+    border: 1px solid;
+}
+
+#rosterTeam_container {
+    overflow: auto;
+    display: block;
+    float: left;
+}
+
+#farRight {
+    float: left;
+    width: 30%;
+    margin: 0px 5px;
+}
+
+#clockDisplay {
+    height: 8px;
+    border: 1px solid;
+}
+
+.clockTeam_container {
+    overflow: auto;
+    margin: 0px 5px 0px 0px;
+}
+
+#chat_container {
+    overflow: auto;
+    margin: 5px 0px;
+    float: left;
+    width: 100%;
+ /*   border: 1px solid;
+    width: 100%;
+    float: left;
+    display: none;
+    */
+}
+
+#chat_table {
+    overflow: auto;
+ //   width: 100%;
+ //   border: 1px solid;
+    font-size: medium;
+    padding-bottom: 10px;
+}
+#chat {
+    border: 1px solid;
+    display: table;
+    width: 100%;
+}
+
+.chatForm {
+    height: 10px;
+}
+
+.rosterList {
+    overflow: auto;
+}
+
+#commishRow {
+    display: none;
+}
+
+#logInBackground {
+    display: none;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background: #000000;
+    z-index: 1;
+    font-size: large;
+}
+
+#logInBlock, #logOutBlock {
+    display: none;
+    position: absolute;
+    background: #fff;
+    padding: 5px;
+    z-index: 10;
+    color: #600;
+    border: 3px solid;
+}
+
+#logOutBlock {
+    font-size: x-large;
+}
+
+#logInButton {
+    text-align: center;
+    float: left;
+}
+
+#logInHide {
+    float: left;
+}
+
+#logInBlock label {
+    float: left;
+    font-size: large;
+}
+
+#logInBlock input {
+    float: right;
+}
+
+#logInMsg {
+    float: left;
+    color: #f00;
+    font-size: x-large;
+}
+
+#logInInfo {
+    display: none;
+    float: right;
+}
+
+#pickFilter {
+    float: left;
+    width: 100%;
+    margin: 5px;
+}
+
+#pickPlayer {
+    float: left;
+    width: 100%;
+    text-align: center;
+}
+
+#filterLabel {
+    float: left;
+}
+
+#filterSelect {
+    float: left;
+}
+
+#makePick {
+    background: #600;
+    background-color: #660000;
+    color: #e2a500;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 8pt;
+    text-align: center;
+    float: left;
+}
+
+#playerForm {
+/*    width: 50%;  */
+    display: none;
+    float: left;
+    margin: 5px 5px 5px 0px;
+    border: 1px solid;
+    width: 26em;
+}
+
+#myPickLabel {
+    background-color: #660000;
+    color: #e2a500;
+    float: center;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+    font-size: 10pt;
+    padding: 5px;
+}
+
+/*#myPick {*/
+  /*  border: 1px solid; */
+    /*float: center;*/
+    /*display: none;*/
+    /*margin: 0px;*/
+/*}*/
+
+#choice {
+    float: center;
+    text-align: center;
+    padding: 5px;
+}
+
+#clearButton {
+    float: center;
+    padding: 5px;
+    text-align: center;
+    display: none;
+}
+
+#selpla {
+    float: left;
+    text-align: center;
+}
+
+.text-large {
+    font-size: 150%;
+}
+
+.border-wm {
+    border-color: #660000!important;
+}
+
+.text-small {
+    font-size: .75rem;
+}
+
+.franchise, .selection {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tableList {
+    max-height: 100%;
+    overflow: auto;
+}
+
+.bg-primary {
+    background-color: #660000!important;
+    color: #e2a500!important;
+}
+
+.btn-outline-warning {
+    color: #660000!important;
+    border-color: #660000!important;
+}
+
+.btn-outline-warning:hover, .btn-outline-warning:active, .btn-outline-warning:focus {
+    color: #e2a500!important;
+    border-color: #e2a500!important;
+}

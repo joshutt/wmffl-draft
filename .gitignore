@@ -24,6 +24,7 @@
 /app/config/parameters.ini
 
 # Managed by Composer
+composer.phar
 /app/bootstrap.php.cache
 /var/bootstrap.php.cache
 /bin/*
@@ -50,3 +51,15 @@
 
 # Embedded web-server pid file
 /.web-server-pid
+
+# IntelliJ Files
+.idea
+*.iml
+/cache/
+
+# Project specific values
+conf/wmffl.conf
+/logs/
+*.log
+*.ini
+.htaccess

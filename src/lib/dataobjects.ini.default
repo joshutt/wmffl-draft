@@ -1,0 +1,7 @@
+[DB_DataObject]
+database = 'mysql://[DBUSERNAME]:[DBPASSWORD]@localhost/[DBNAME]'
+schema_location   = [REPOSITORY_ROOT]/lib/DataObjects
+class_location    = [REPOSITORY_ROOT]/lib/DataObjects
+require_prefix    = DataObjects/
+class_prefix      = DataObjects_
+
