@@ -28,26 +28,48 @@ EOD;
         $posMap[$row[0]] = $row[1];
     }
 
+    // Determine current round
+    $roundQuery = <<<EOD
+select min(dp.round)
+from draftpicks dp
+where dp.playerid is null and dp.teamid=$autoteam and dp.season=$currentSeason
+EOD;
+    $result2 = mysqli_query($conn, $roundQuery) or die("Unable to do query: " . mysqli_error($conn));
+    $row = mysqli_fetch_array($result2);
+    $round = $row[0];
+
+#print_r($posMap);
     $starters = array();
     $backup = array();
     foreach ($posMap as $pos => $num) {
+        $pickRound = 0;
         switch ($pos) {
-            case "QB":
             case "TE":
-            case "K":
-            case "OL":
-                if ($num < 1) {
+                $pickRound = 2;
+            case "QB":
+                if ($num < 1 && $round > $pickRound) {
                     array_push($starters, $pos);
                 } else if ($num == 1) {
                     array_push($backup, $pos);
                 }
                 break;
-            case "RB":
-            case "WR":
+            case "K":
+                if ($num < 1 && $round > 12) {
+                    array_push($starters, $pos);
+                }
+                break;
+            case "OL":
+                if ($num < 1 && $round > 9) {
+                    array_push($starters, $pos);
+                }
+                break;
             case "DL":
             case "LB":
             case "DB":
-                if ($num < 2) {
+                $pickRound = 2;
+            case "RB":
+            case "WR":
+                if ($num < 2 && $round > $pickRound) {
                     array_push($starters, $pos);
                 } else if ($num == 2) {
                     array_push($backup, $pos);
@@ -55,6 +77,8 @@ EOD;
                 break;
         }
     }
+    #print_r($starters);
+    #print_r($backup);
 
     if (sizeof($starters) > 0) {
         $bigWhere = "p.pos IN ('" . implode("','",$starters) . "')";
@@ -63,6 +87,7 @@ EOD;
     } else {
         $bigWhere = "1=1";
     }
+    #print $bigWhere;
 }
 
 $evalSeason = $currentSeason - 1;  // $currentSeason will exist because of start.php
