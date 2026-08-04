@@ -1,111 +1,525 @@
+/* WMFFL Live Draft — single stylesheet for the SPA.
+   Dark "draft room" theme with a maroon nod to the legacy site's #660000
+   and an amber pick clock. */
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --bg: #10141d;
+  --panel: #1a2130;
+  --panel-raised: #222b3d;
+  --border: #2c3648;
+  --text: #e6eaf2;
+  --muted: #8b95a8;
+  --brand: #8f2f39;
+  --accent: #f5a623;
+  --good: #3fb96e;
+  --bad: #e0524e;
+  --focus: #4f8ff7;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: dark;
+  font: 15px/1.45 var(--sans);
   color: var(--text);
   background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+* {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  min-height: 100vh;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+input,
+select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+/* ---------- header + clock bar ---------- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.5rem 1rem;
+  background: var(--brand);
+  color: #fff;
+}
+
+.app-brand {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.app-nav a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.app-nav a.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.app-user {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.clock-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--panel-raised);
+  border-bottom: 1px solid var(--border);
+}
+
+.clock-bar-slot strong {
+  font-size: 1.15rem;
+}
+
+.clock-bar-time {
+  font-family: var(--mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 4.5rem;
+}
+
+.clock-bar-time.urgent {
+  color: var(--bad);
+}
+
+.clock-bar-paused {
+  align-self: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+}
+
+.clock-bar-team {
+  margin-left: auto;
+}
+
+.clock-bar-team strong {
+  font-size: 1.15rem;
+}
+
+/* ---------- layout ---------- */
+
+.app-main {
+  padding: 1rem;
+}
+
+.page-notice {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 3rem;
+}
+
+.board-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 430px) 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.side-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.commish-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.commish-login {
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .board-layout,
+  .commish-layout {
+    grid-template-columns: 1fr;
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
+
+.error-banner {
+  grid-column: 1 / -1;
+  background: rgba(224, 82, 78, 0.15);
+  border: 1px solid var(--bad);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* ---------- cards ---------- */
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.card-title {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error-text {
+  color: var(--bad);
+  margin: 0.4rem 0;
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-primary {
+  background: var(--good);
+  border-color: var(--good);
+  color: #06130b;
+  font-weight: 600;
+}
+
+.btn-danger {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: #1b0605;
+  font-weight: 600;
+}
+
+.btn-small {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+  margin-top: 0.6rem;
+}
+
+/* ---------- picks grid ---------- */
+
+.picks-scroll {
+  overflow-y: auto;
+  max-height: calc(100vh - 11rem);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th {
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 0.3rem 0.5rem;
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+}
+
+td {
+  padding: 0.28rem 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+td.num {
+  font-family: var(--mono);
+  text-align: right;
+}
+
+tr.current-pick td {
+  background: rgba(245, 166, 35, 0.12);
+  border-top-color: var(--accent);
+  border-bottom: 1px solid var(--accent);
+}
+
+.on-clock-label {
+  color: var(--accent);
+  font-style: italic;
+}
+
+/* ---------- login ---------- */
+
+.login-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.login-form label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ---------- my pick ---------- */
+
+.my-pick-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.badge-on-clock {
+  color: var(--accent);
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.85rem;
+}
+
+.hold-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.player-filters {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.player-filters input[type='search'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  max-height: 19rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.player-list li.empty {
+  padding: 0.5rem;
+}
+
+.player-list button {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--border);
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+}
+
+.player-list li:first-child button {
+  border-top: 0;
+}
+
+.player-list button:hover {
+  background: var(--panel-raised);
+}
+
+.player-list button.selected {
+  background: rgba(79, 143, 247, 0.2);
+}
+
+.pick-message {
+  margin: 0.6rem 0 0;
+  color: var(--accent);
+}
+
+/* ---------- status / clocks / rosters ---------- */
+
+.status-list {
+  margin: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.status-list div {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.status-list dt {
+  color: var(--muted);
+  min-width: 5.5rem;
+}
+
+.status-list dd {
+  margin: 0;
+}
+
+.team-clocks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.25rem 1rem;
+}
+
+.team-clocks li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+}
+
+.team-clocks li.on-clock {
+  background: rgba(245, 166, 35, 0.12);
+  color: var(--accent);
+}
+
+.team-clocks .team-time {
+  font-family: var(--mono);
+}
+
+.roster-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.tab {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.tab.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.roster-table td.pos {
+  font-family: var(--mono);
+  color: var(--muted);
+}
+
+/* ---------- commish ---------- */
+
+.commish-clock-status {
+  margin: 0 0 0.4rem;
+}
+
+.commish-clock-big {
+  font-family: var(--mono);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0.2rem 0 0.6rem;
+}
+
+.commish-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.auto-pos-row {
+  margin-bottom: 0.6rem;
+}
+
+.presence-dot {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+}
+
+.presence-dot.in {
+  background: var(--good);
+}
+
+.presence-dot.out {
+  background: var(--bad);
 }

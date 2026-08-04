@@ -34,4 +34,30 @@ class ClockStopRepository
 
         return $totalExtra;
     }
+
+    /** Records a pause beginning now — stopClock.php's INSERT on stop. */
+    public function recordStop(int $season, int $round, int $pick): void
+    {
+        $stmt = Db::connection()->prepare(
+            'INSERT INTO draftclockstop (season, round, pick, timeStopped) VALUES (?, ?, ?, NOW())'
+        );
+        $stmt->execute([$season, $round, $pick]);
+    }
+
+    /** Closes any open pause rows for the pick — stopClock.php's UPDATE on start. */
+    public function markResumed(int $season, int $round, int $pick): void
+    {
+        $stmt = Db::connection()->prepare(
+            'UPDATE draftclockstop SET timeStarted = NOW()
+             WHERE season = ? AND round = ? AND pick = ? AND timeStarted IS NULL'
+        );
+        $stmt->execute([$season, $round, $pick]);
+    }
+
+    /** Clears the season's pause history — startDraft.php's DELETE. */
+    public function deleteForSeason(int $season): void
+    {
+        $stmt = Db::connection()->prepare('DELETE FROM draftclockstop WHERE season = ?');
+        $stmt->execute([$season]);
+    }
 }

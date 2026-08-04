@@ -30,6 +30,7 @@ final class PickService
         private readonly PlayerRepository $players = new PlayerRepository(),
         private readonly DraftPickHoldRepository $holds = new DraftPickHoldRepository(),
         private readonly DraftClockService $clock = new DraftClockService(),
+        private readonly DraftStateService $draftState = new DraftStateService(),
     ) {
     }
 
@@ -52,6 +53,14 @@ final class PickService
      */
     public function makePick(int $teamId, int $playerId, int $season): void
     {
+        // Legacy parity: before draft.start, getTeamOnClock() returns nobody,
+        // so setPick.php could only queue holds — nobody could land a pick.
+        // Without this check the first team's owner could fill pick 1.1
+        // before the commish starts the draft.
+        if (!$this->draftState->isDraftStarted()) {
+            throw new PickConflictException('The draft has not started yet.');
+        }
+
         $pdo = Db::connection();
         $pdo->beginTransaction();
 

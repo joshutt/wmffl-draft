@@ -20,6 +20,7 @@ class DraftStateService
     private const KEY_FULL_START = 'draft.full.start';
     private const KEY_CLOCK_MAX_TIME = 'draft.clock.maxTime';
     private const KEY_CLOCK_ADD_TIME = 'draft.clock.addTime';
+    private const KEY_CLOCK_ALLOWED = 'draft.clock.allowed';
     private const KEY_TEAM_PREFIX = 'draft.team.';
     private const KEY_LOGIN_PREFIX = 'draft.login.';
 
@@ -30,6 +31,11 @@ class DraftStateService
     public function isDraftStarted(): bool
     {
         return $this->config->get(self::KEY_START) === 'true';
+    }
+
+    public function setDraftStarted(bool $started): void
+    {
+        $this->config->set(self::KEY_START, $started ? 'true' : 'false');
     }
 
     public function isClockRunning(): bool
@@ -48,6 +54,16 @@ class DraftStateService
         $value = $this->config->get(self::KEY_CLOCK_START);
 
         return $value !== null ? (int) $value : null;
+    }
+
+    public function setClockStartTimestamp(int $timestamp): void
+    {
+        $this->config->set(self::KEY_CLOCK_START, (string) $timestamp);
+    }
+
+    public function setFullStartTimestamp(int $timestamp): void
+    {
+        $this->config->set(self::KEY_FULL_START, (string) $timestamp);
     }
 
     /** Unix timestamp the draft as a whole started, or null if never set. */
@@ -98,5 +114,39 @@ class DraftStateService
     public function recordLoginHeartbeat(int $userId): void
     {
         $this->config->set(self::KEY_LOGIN_PREFIX . $userId, date('Y-m-d H:i:s'));
+    }
+
+    /**
+     * Every user's last-seen heartbeat, keyed by userId — for the commish
+     * presence table.
+     *
+     * @return array<int, string> userId => 'Y-m-d H:i:s' last-seen
+     */
+    public function getAllLoginHeartbeats(): array
+    {
+        $result = [];
+        foreach ($this->config->getByPrefix(self::KEY_LOGIN_PREFIX) as $key => $value) {
+            $userId = (int) substr($key, strlen(self::KEY_LOGIN_PREFIX));
+            $result[$userId] = $value;
+        }
+
+        return $result;
+    }
+
+    /** The per-team clock budget every team starts the draft with. */
+    public function getAllowedSeconds(): int
+    {
+        return (int) ($this->config->get(self::KEY_CLOCK_ALLOWED) ?? 0);
+    }
+
+    /**
+     * Resets every existing draft.team.<id> clock to the same value — port of
+     * startDraft.php's `UPDATE config ... WHERE key LIKE 'draft.team.%'`.
+     */
+    public function resetAllTeamClocks(int $seconds): void
+    {
+        foreach (array_keys($this->getAllTeamRemainingSeconds()) as $teamId) {
+            $this->setTeamRemainingSeconds($teamId, $seconds);
+        }
     }
 }

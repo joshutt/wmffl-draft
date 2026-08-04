@@ -40,4 +40,28 @@ class TeamRepository
 
         return $names;
     }
+
+    /**
+     * @return list<array{teamId:int,name:string,abbrev:string}> every team in
+     *     the season, ordered by name — abbrevs back the roster-viewer tabs
+     *     that draft.php hardcoded per team.
+     */
+    public function findAllForSeason(int $season): array
+    {
+        $stmt = Db::connection()->prepare(
+            'SELECT teamid, name, abbrev FROM teamnames WHERE season = ? ORDER BY name'
+        );
+        $stmt->execute([$season]);
+
+        $teams = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $teams[] = [
+                'teamId' => (int) $row['teamid'],
+                'name' => $row['name'],
+                'abbrev' => $row['abbrev'],
+            ];
+        }
+
+        return $teams;
+    }
 }

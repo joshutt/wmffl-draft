@@ -72,6 +72,70 @@ class DraftPickRepository
     }
 
     /**
+     * The most recent filled pick — undopick.php's target row.
+     *
+     * @return array{round:int,pick:int,teamId:int,playerId:int}|null
+     */
+    public function findLastFilledPick(int $season): ?array
+    {
+        $stmt = Db::connection()->prepare(
+            'SELECT Round, Pick, teamid, playerid FROM draftpicks
+             WHERE Season = ? AND playerid IS NOT NULL
+             ORDER BY Round DESC, Pick DESC LIMIT 1'
+        );
+        $stmt->execute([$season]);
+        $row = $stmt->fetch();
+
+        if ($row === false) {
+            return null;
+        }
+
+        return [
+            'round' => (int) $row['Round'],
+            'pick' => (int) $row['Pick'],
+            'teamId' => (int) $row['teamid'],
+            'playerId' => (int) $row['playerid'],
+        ];
+    }
+
+    /** Reopens a pick — undopick.php's `set playerid=null`. */
+    public function clearPick(int $season, int $round, int $pick): void
+    {
+        $stmt = Db::connection()->prepare(
+            'UPDATE draftpicks SET playerid = NULL WHERE Season = ? AND Round = ? AND Pick = ?'
+        );
+        $stmt->execute([$season, $round, $pick]);
+    }
+
+    /** The team holding a specific pick slot (e.g. round 1 pick 1). */
+    public function findTeamForPick(int $season, int $round, int $pick): ?int
+    {
+        $stmt = Db::connection()->prepare(
+            'SELECT teamid FROM draftpicks WHERE Season = ? AND Round = ? AND Pick = ?'
+        );
+        $stmt->execute([$season, $round, $pick]);
+        $teamId = $stmt->fetchColumn();
+
+        return $teamId === false || $teamId === null ? null : (int) $teamId;
+    }
+
+    /**
+     * The earliest round in which this team still has an open pick — feeds
+     * the autopick round-based position heuristic (commish/autopick.php).
+     */
+    public function minOpenRoundForTeam(int $teamId, int $season): ?int
+    {
+        $stmt = Db::connection()->prepare(
+            'SELECT MIN(Round) FROM draftpicks
+             WHERE playerid IS NULL AND teamid = ? AND Season = ?'
+        );
+        $stmt->execute([$teamId, $season]);
+        $round = $stmt->fetchColumn();
+
+        return $round === false || $round === null ? null : (int) $round;
+    }
+
+    /**
      * Every pick for the season, in round/pick order, joined with the
      * picking team's name and (when filled) the selected player's info.
      * Backs GET /api/draft/board — replaces picks.php's per-row DataObjects

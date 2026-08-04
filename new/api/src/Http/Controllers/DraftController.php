@@ -56,14 +56,14 @@ final class DraftController
             $timeRemaining = max(0, $avail - $totalUsed);
         }
 
-        $teamNames = $this->teams->findNamesForSeason($season);
         $teamSeconds = $this->draftState->getAllTeamRemainingSeconds();
         $teamClocks = [];
-        foreach ($teamNames as $teamId => $name) {
+        foreach ($this->teams->findAllForSeason($season) as $team) {
             $teamClocks[] = [
-                'teamId' => $teamId,
-                'name' => $name,
-                'seconds' => $teamSeconds[$teamId] ?? 0,
+                'teamId' => $team['teamId'],
+                'name' => $team['name'],
+                'abbrev' => $team['abbrev'],
+                'seconds' => $teamSeconds[$team['teamId']] ?? 0,
             ];
         }
 
@@ -94,6 +94,11 @@ final class DraftController
             'picks' => $allPicks,
             'teamClocks' => $teamClocks,
             'myHold' => $myHold,
+            // For the commish console's total-draft-time display (legacy
+            // commish.js: timestamp - draftstart) — serverTime avoids
+            // trusting the client's clock.
+            'serverTime' => time(),
+            'draftStartedAt' => $this->draftState->getFullStartTimestamp(),
         ]);
     }
 

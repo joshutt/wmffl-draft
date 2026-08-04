@@ -1,32 +1,34 @@
-# React + TypeScript + Vite
+# WMFFL Draft SPA (new/web)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript + Vite front end for the draft rewrite
+(`docs/modernization-spec.md`). Two routes: `/` is the public draft board,
+`/commish` is the commissioner console. All data comes from the PHP JSON API
+in `new/api` via polling (no websockets, by design).
 
-Currently, two official plugins are available:
+## Building
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+On this repo's WSL host the checkout sits on a 9p mount where Node's file
+syscalls fail — **always build with `./build.sh`**, which mirrors sources to
+a native directory, builds there, and copies `dist/` back. On a normal
+filesystem `npm install && npm run build` works directly.
 
-## React Compiler
+`dist/` is committed on purpose: the shared host has no Node, deploys are a
+plain `git pull`, so the build output must be in the repo. **Rebuild before
+every deploy commit** (spec §3).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Local development
 
-## Expanding the Oxlint configuration
+1. Seed the local test DB: `php new/api/bin/seed-draft.php`
+   (logins `owner1..owner12` / `pw1..pw12`, `commish` / `cpw`)
+2. Run app + API together (from the repo root):
+   `PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8080 -t new/web/dist new/dev-server.php`
+3. Open http://127.0.0.1:8080 — `new/dev-server.php` mimics the production
+   .htaccess: SPA from `dist/` at the root, `/api/*` to the front controller,
+   SPA-route fallback to index.html. (Serving `new/api/public/index.php`
+   directly gives you the API only — `/` will be a JSON 404.)
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+For SPA work with hot reload, additionally run `npm run dev` (from the
+native mirror dir on WSL) — `vite.config.ts` proxies `/api` to :8080.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`php new/api/tests/integration.php [base-url]` runs the full §4 parity
+checklist against a running API (destructive — seeded/staging DBs only).

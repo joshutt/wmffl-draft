@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use App\Db;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommishController;
 use App\Http\Controllers\DraftController;
+use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\RosterController;
 use App\Http\Response;
 use App\Http\Router;
 use App\Http\Session;
@@ -48,8 +51,21 @@ $router->post('/draft/pick', $draft->pick(...));
 $router->post('/draft/hold', $draft->hold(...));
 $router->delete('/draft/hold', $draft->clearHold(...));
 
-// /api/players, /api/roster/{teamId}, and all /api/commish/* endpoints land
-// in later phases (docs/modernization-spec.md §9: Aug 9-13 / Aug 16-19).
+// Player list / roster viewer — replaces playerList.php, rosterHtml.php
+$playerController = new PlayerController();
+$router->get('/players', $playerController->list(...));
+$rosterController = new RosterController();
+$router->get('/roster/{teamId}', $rosterController->show(...));
+
+// Commish console — replaces commish/index.php + getLogins.php,
+// commish/startDraft.php, stopClock.php, commish/autopick.php, undopick.php
+$commish = new CommishController();
+$router->get('/commish/status', $commish->status(...));
+$router->post('/commish/draft/start', $commish->startDraft(...));
+$router->post('/commish/clock/start', $commish->startClock(...));
+$router->post('/commish/clock/stop', $commish->stopClock(...));
+$router->post('/commish/pick/auto', $commish->autoPick(...));
+$router->post('/commish/pick/undo', $commish->undoPick(...));
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $path = preg_replace('#^/api#', '', $path) ?: '/';

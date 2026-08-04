@@ -14,6 +14,9 @@ DROP TABLE IF EXISTS teamnames;
 DROP TABLE IF EXISTS config;
 DROP TABLE IF EXISTS weekmap;
 DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS owners;
+DROP TABLE IF EXISTS playerscores;
+DROP TABLE IF EXISTS nflbyes;
 
 CREATE TABLE config (
     `key` VARCHAR(255) NOT NULL PRIMARY KEY,
@@ -46,7 +49,8 @@ CREATE TABLE newplayers (
     lastname VARCHAR(25) NOT NULL,
     firstname VARCHAR(25) NULL,
     pos VARCHAR(2) NULL,
-    team VARCHAR(3) NULL
+    team VARCHAR(3) NULL,
+    usePos INT NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 
 CREATE TABLE nflrosters (
@@ -99,4 +103,28 @@ CREATE TABLE user (
     primaryowner INT NOT NULL DEFAULT 0,
     active CHAR(1) NOT NULL DEFAULT 'Y',
     commish INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB;
+
+CREATE TABLE owners (
+    teamid INT NOT NULL,
+    userid INT NOT NULL,
+    season SMALLINT UNSIGNED NOT NULL,
+    `primary` INT NOT NULL DEFAULT 0,
+    PRIMARY KEY (teamid, userid, season)
+) ENGINE=InnoDB;
+
+CREATE TABLE playerscores (
+    playerid INT NOT NULL,
+    season INT NOT NULL,
+    week INT NOT NULL,
+    pts INT NULL,
+    active INT NULL,
+    PRIMARY KEY (playerid, season, week)
+) ENGINE=InnoDB;
+
+CREATE TABLE nflbyes (
+    season SMALLINT UNSIGNED NOT NULL,
+    week INT NOT NULL,
+    nflteam VARCHAR(3) NOT NULL,
+    PRIMARY KEY (season, nflteam)
 ) ENGINE=InnoDB;
