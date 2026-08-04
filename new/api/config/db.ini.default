@@ -1,4 +1,7 @@
-# Fix the values as needed and rename to db.ini (gitignored — see .gitignore's *.ini pattern)
+# Fix the values as needed and rename to db.ini. It's gitignored via the
+# root .gitignore's *.ini pattern.
+# Note: PHP's ini parser errors on parentheses inside a comment line — avoid
+# them in comments added to this file or any copy of it.
 [DB_Values]
 host=localhost
 port=3306

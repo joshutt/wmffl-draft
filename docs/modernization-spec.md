@@ -149,7 +149,7 @@ No test suite exists today; given the timeline, testing effort is targeted at th
 | Dates | Work |
 |---|---|
 | Aug 4–5 | **Done.** Phase 0 complete (§7); scaffold `new/api` (Composer, PSR-4) and `new/web` (Vite), confirm staging DB connectivity |
-| Aug 6–9 | Data access layer (repositories + `Db.php`), auth endpoint, `DraftClockService`/`PickService` ports, `/api/draft/board`, `/api/draft/pick`, `/api/draft/hold` |
+| Aug 6–9 | **Done.** Data access layer (repositories + `Db.php`), auth endpoint, `DraftClockService`/`PickService` ports (incl. §6 transactional race fix), `/api/draft/board`, `/api/draft/pick`, `/api/draft/hold`; PHPUnit coverage for `DraftClockService` and `PickService` (incl. a real concurrent-process test of the race fix) |
 | Aug 9–13 | React SPA scaffold (Vite), public draft board (picks grid, clock, roster viewer, player list + filters), wired to polling |
 | Aug 13–16 | Pick submission + hold/preselect UI, auto-advance behavior |
 | Aug 16–19 | Commish console (status table, start draft, start/stop clock, undo, force auto-pick) |
