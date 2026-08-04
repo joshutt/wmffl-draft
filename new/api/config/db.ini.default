@@ -1,0 +1,7 @@
+# Fix the values as needed and rename to db.ini (gitignored — see .gitignore's *.ini pattern)
+[DB_Values]
+host=localhost
+port=3306
+dbname=
+username=
+password=
