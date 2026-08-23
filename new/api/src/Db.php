@@ -21,6 +21,15 @@ final class Db
     public static function connection(): PDO
     {
         if (self::$instance === null) {
+            // Match legacy's utils/start.php, which forces this same zone:
+            // MySQL's TIMESTAMP columns (draftpicks.pickTime) are stored/read
+            // in the server's SYSTEM zone (America/New_York), but PHP's
+            // default is UTC. Without this, strtotime() on a fetched
+            // TIMESTAMP string (DraftPickRepository::maxPickTimestamp()) is
+            // off by the zone offset, which silently breaks
+            // DraftClockService::getPreviousPickTime() — see the postmortem
+            // in docs/modernization-spec.md's clock bug notes.
+            date_default_timezone_set('America/New_York');
             self::$instance = self::connect(self::loadConfig());
         }
 
