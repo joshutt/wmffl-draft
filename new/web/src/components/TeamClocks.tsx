@@ -17,8 +17,8 @@ export function TeamClocks({ board, displaySeconds }: { board: Board; displaySec
           const isOnClock = t.teamId === onClockTeamId
 
           return (
-            <li key={t.teamId} className={isOnClock ? 'on-clock' : undefined}>
-              <span className="team-name">{t.name}</span>
+            <li key={t.teamId} className={isOnClock ? 'on-clock' : undefined} title={t.name}>
+              <span className="team-name">{t.abbrev}</span>
               <span className="team-time">
                 {formatClock(isOnClock && board.clockRunning ? displaySeconds : t.seconds)}
               </span>

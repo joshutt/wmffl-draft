@@ -40,7 +40,7 @@ export function RosterViewer({ board }: { board: Board }) {
   }, [teamId, filledPickCount])
 
   return (
-    <section className="card">
+    <section className="card roster-card">
       <h2 className="card-title">Rosters</h2>
       <div className="roster-tabs">
         {board.teamClocks.map((t) => (
