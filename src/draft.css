@@ -1,5 +1,5 @@
 body {
-    color: #660000;
+    color: #5A1414;
     font-family: Verdana;
     background-color: #FFFFFF;
     border: 0px none;
@@ -14,8 +14,8 @@ caption {
 
 
 th {
-    background-color: #660000;
-    color: #e2a500;
+    background-color: #5A1414;
+    color: #FFB612;
     font-style: italic;
     font-weight: bold;
     font-size: 8pt;
@@ -150,7 +150,7 @@ th {
 }
 
 a.tools {
-    color: #660000;
+    color: #5A1414;
     font-weight: bold;
     text-decoration: none;
     text-align: center;
@@ -158,18 +158,18 @@ a.tools {
 }
 
 a.tools:hover {
-    color: #e2a500;
+    color: #FFB612;
 }
 
 a.teamRoster {
-    color: #660000;
+    color: #5A1414;
     font-weight: bold;
     text-decoration: none;
     text-align: center;
 }
 
 a.teamRoster:hover {
-    color: #e2a500;
+    color: #FFB612;
 }
 
 #statusTable {
@@ -265,7 +265,7 @@ a.teamRoster:hover {
     background: #fff;
     padding: 5px;
     z-index: 10;
-    color: #600;
+    color: #5A1414;
     border: 3px solid;
 }
 
@@ -323,9 +323,9 @@ a.teamRoster:hover {
 }
 
 #makePick {
-    background: #600;
-    background-color: #660000;
-    color: #e2a500;
+    background: #5A1414;
+    background-color: #5A1414;
+    color: #FFB612;
     font-style: italic;
     font-weight: bold;
     font-size: 8pt;
@@ -343,8 +343,8 @@ a.teamRoster:hover {
 }
 
 #myPickLabel {
-    background-color: #660000;
-    color: #e2a500;
+    background-color: #5A1414;
+    color: #FFB612;
     float: center;
     font-style: italic;
     font-weight: bold;
@@ -383,7 +383,7 @@ a.teamRoster:hover {
 }
 
 .border-wm {
-    border-color: #660000!important;
+    border-color: #5A1414!important;
 }
 
 .text-small {
@@ -402,16 +402,16 @@ a.teamRoster:hover {
 }
 
 .bg-primary {
-    background-color: #660000!important;
-    color: #e2a500!important;
+    background-color: #5A1414!important;
+    color: #FFB612!important;
 }
 
 .btn-outline-warning {
-    color: #660000!important;
-    border-color: #660000!important;
+    color: #5A1414!important;
+    border-color: #5A1414!important;
 }
 
 .btn-outline-warning:hover, .btn-outline-warning:active, .btn-outline-warning:focus {
-    color: #e2a500!important;
-    border-color: #e2a500!important;
+    color: #FFB612!important;
+    border-color: #FFB612!important;
 }
