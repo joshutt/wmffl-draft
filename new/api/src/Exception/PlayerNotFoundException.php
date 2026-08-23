@@ -6,7 +6,7 @@ namespace App\Exception;
 
 use RuntimeException;
 
-/** The submitted player id doesn't exist in newplayers. Maps to HTTP 400. */
+/** The submitted player id doesn't exist in players. Maps to HTTP 400. */
 final class PlayerNotFoundException extends RuntimeException
 {
 }

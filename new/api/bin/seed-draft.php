@@ -92,7 +92,7 @@ $positionCounts = [
 ];
 
 $insPlayer = $pdo->prepare(
-    'INSERT INTO newplayers (playerid, flmid, lastname, firstname, pos, usePos) VALUES (?, ?, ?, ?, ?, 1)'
+    'INSERT INTO players (playerid, flmid, lastname, firstname, pos, usePos) VALUES (?, ?, ?, ?, ?, 1)'
 );
 $insNflRoster = $pdo->prepare(
     "INSERT INTO nflrosters (playerid, nflteamid, dateon, dateoff, pos) VALUES (?, ?, '2026-03-01', NULL, ?)"

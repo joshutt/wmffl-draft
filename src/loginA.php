@@ -33,7 +33,7 @@ $_SESSION["fullname"] = $count["name"];
 
 
 $sql = "SELECT CONCAT(p.lastname, ', ', p.firstname, ' - ', p.pos, ' - ', r.nflteamid)
-FROM draftPickHold d JOIN newplayers p ON d.playerid=p.playerid
+FROM draftPickHold d JOIN players p ON d.playerid=p.playerid
 JOIN nflrosters r on r.playerid=d.playerid and r.dateoff is null
 WHERE d.teamid={$count["teamid"]}";
 $result2 = mysqli_query($conn, $sql);

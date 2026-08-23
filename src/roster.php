@@ -4,7 +4,7 @@ require_once "utils/start.php";
 $sql = <<<EOD
 
 SELECT p.pos, CONCAT(p.firstName, ' ', p.lastName) as 'playername', t.name, t.teamid, r.dateon
-FROM newplayers p
+FROM players p
 JOIN roster r ON r.playerid=p.playerid and r.dateoff is null
 JOIN teamnames t ON r.teamid=t.teamid
 WHERE t.season=$currentSeason

@@ -17,7 +17,7 @@ abstract class DbTestCase extends TestCase
 {
     private const TABLES = [
         'draftPickHold', 'draftclockstop', 'roster', 'draftpicks',
-        'nflrosters', 'newplayers', 'teamnames', 'config', 'weekmap', 'user',
+        'nflrosters', 'players', 'teamnames', 'config', 'weekmap', 'user',
         'owners', 'playerscores', 'nflbyes',
     ];
 

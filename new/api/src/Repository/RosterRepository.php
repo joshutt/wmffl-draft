@@ -62,7 +62,7 @@ class RosterRepository
         $stmt = Db::connection()->prepare(
             "SELECT p.pos, CONCAT(p.firstname, ' ', p.lastname) AS playername,
                     n.nflteamid, b.week
-             FROM newplayers p
+             FROM players p
              JOIN roster r ON r.playerid = p.playerid AND r.dateoff IS NULL
              LEFT JOIN nflrosters n ON p.playerid = n.playerid AND n.dateoff IS NULL
              LEFT JOIN nflbyes b ON b.season = ? AND n.nflteamid = b.nflteam
@@ -94,7 +94,7 @@ class RosterRepository
     {
         $stmt = Db::connection()->prepare(
             'SELECT p.pos, COUNT(*) AS cnt
-             FROM newplayers p
+             FROM players p
              JOIN roster r ON p.playerid = r.PlayerID AND r.DateOff IS NULL
              WHERE r.teamid = ?
              GROUP BY p.pos'

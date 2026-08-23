@@ -3,7 +3,7 @@ require_once "utils/start.php";
 $pos = $_REQUEST["pos"];
 $nfl = $_REQUEST["nfl"];
 
-$sql = "SELECT p.playerid, p.lastname, p.firstname, p.pos, r.nflteamid FROM newplayers p, nflrosters r left join roster wr on wr.playerid=p.playerid and wr.dateoff is null WHERE p.playerid=r.playerid and r.dateoff is null and usePos=1 and wr.teamid is null ";
+$sql = "SELECT p.playerid, p.lastname, p.firstname, p.pos, r.nflteamid FROM players p, nflrosters r left join roster wr on wr.playerid=p.playerid and wr.dateoff is null WHERE p.playerid=r.playerid and r.dateoff is null and usePos=1 and wr.teamid is null ";
 if ($pos != "*" && $pos != "") {
     $sql .= "and p.pos='$pos' ";
 }

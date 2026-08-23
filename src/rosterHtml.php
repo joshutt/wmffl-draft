@@ -6,7 +6,7 @@ $teamId = $_REQUEST["teamid"];
 $sql = <<<EOD
 
 SELECT p.pos, CONCAT(p.firstName, ' ', p.lastName) as 'playername', t.name, t.teamid, r.dateon, n.nflteamid as 'nfl', b.week
-FROM newplayers p
+FROM players p
 JOIN roster r ON r.playerid=p.playerid and r.dateoff is null
 JOIN teamnames t ON r.teamid=t.teamid
 LEFT JOIN nflrosters n on p.playerid=n.playerid and n.dateoff is null

@@ -7,9 +7,9 @@ namespace App\Repository;
 use App\Db;
 
 /**
- * Port of `newplayers` (+ current `nflrosters` row) access needed by the
+ * Port of `players` (+ current `nflrosters` row) access needed by the
  * draft pick flow. Player IDs throughout the new API are always
- * newplayers.playerid — the internal PK, matching what playerList.php's
+ * players.playerid — the internal PK, matching what playerList.php's
  * "id-<playerid>" values already resolve to in the legacy pick flow.
  */
 class PlayerRepository
@@ -20,7 +20,7 @@ class PlayerRepository
     public function findById(int $playerId): ?array
     {
         $stmt = Db::connection()->prepare(
-            'SELECT playerid, firstname, lastname, pos FROM newplayers WHERE playerid = ?'
+            'SELECT playerid, firstname, lastname, pos FROM players WHERE playerid = ?'
         );
         $stmt->execute([$playerId]);
         $row = $stmt->fetch();
@@ -48,7 +48,7 @@ class PlayerRepository
     public function findAvailable(?string $pos, ?string $nfl): array
     {
         $sql = 'SELECT p.playerid, p.lastname, p.firstname, p.pos, r.nflteamid
-                FROM newplayers p
+                FROM players p
                 JOIN nflrosters r ON p.playerid = r.playerid AND r.dateoff IS NULL
                 LEFT JOIN roster wr ON wr.playerid = p.playerid AND wr.dateoff IS NULL
                 WHERE p.usePos = 1 AND wr.teamid IS NULL';
@@ -92,7 +92,7 @@ class PlayerRepository
     public function findBestAvailableByScore(int $scoreSeason, ?array $positions): ?int
     {
         $sql = "SELECT p.playerid
-                FROM newplayers p
+                FROM players p
                 JOIN playerscores ps ON p.playerid = ps.playerid
                 LEFT JOIN roster r ON p.playerid = r.playerid AND r.dateoff IS NULL
                 LEFT JOIN nflrosters nr ON nr.playerid = p.playerid AND nr.dateoff IS NULL
@@ -127,7 +127,7 @@ class PlayerRepository
     {
         $stmt = Db::connection()->prepare(
             'SELECT p.playerid, p.firstname, p.lastname, p.pos, r.nflteamid
-             FROM newplayers p
+             FROM players p
              LEFT JOIN nflrosters r ON r.playerid = p.playerid AND r.dateoff IS NULL
              WHERE p.playerid = ?'
         );

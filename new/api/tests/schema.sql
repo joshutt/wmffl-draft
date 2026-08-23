@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS draftclockstop;
 DROP TABLE IF EXISTS roster;
 DROP TABLE IF EXISTS draftpicks;
 DROP TABLE IF EXISTS nflrosters;
-DROP TABLE IF EXISTS newplayers;
+DROP TABLE IF EXISTS players;
 DROP TABLE IF EXISTS teamnames;
 DROP TABLE IF EXISTS config;
 DROP TABLE IF EXISTS weekmap;
@@ -43,7 +43,7 @@ CREATE TABLE draftpicks (
     PRIMARY KEY (Season, Round, Pick)
 ) ENGINE=InnoDB;
 
-CREATE TABLE newplayers (
+CREATE TABLE players (
     playerid INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     flmid INT NOT NULL,
     lastname VARCHAR(25) NOT NULL,

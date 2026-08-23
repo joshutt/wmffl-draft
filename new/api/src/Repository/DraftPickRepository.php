@@ -155,7 +155,7 @@ class DraftPickRepository
                     r.nflteamid, d.pickTime
              FROM draftpicks d
              JOIN teamnames t ON t.teamid = d.teamid AND t.season = d.Season
-             LEFT JOIN newplayers p ON p.playerid = d.playerid
+             LEFT JOIN players p ON p.playerid = d.playerid
              LEFT JOIN nflrosters r ON r.playerid = d.playerid AND r.dateoff IS NULL
              WHERE d.Season = ?
              ORDER BY d.Round, d.Pick'

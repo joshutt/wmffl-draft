@@ -16,7 +16,7 @@ if (isset($_REQUEST['pos'])) {
     $posQuery = <<<EOD
 
 select p.pos, count(*)
-from newplayers p
+from players p
 JOIN roster r on p.playerid=r.PlayerID and r.DateOff is null
 where r.teamid=$autoteam
 group by p.pos
@@ -94,7 +94,7 @@ $evalSeason = $currentSeason - 1;  // $currentSeason will exist because of start
 $query = <<<EOD
 
 SELECT p.playerid, p.firstname, p.lastname, p.pos, sum(ps.pts), r.teamid
-FROM newplayers p
+FROM players p
 JOIN playerscores ps ON p.playerid = ps.playerid
 LEFT JOIN roster r ON p.playerid = r.playerid AND r.dateoff IS NULL
 LEFT JOIN nflrosters nr ON nr.playerid=p.playerid and nr.dateoff is null

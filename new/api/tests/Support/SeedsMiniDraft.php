@@ -35,7 +35,7 @@ trait SeedsMiniDraft
         ");
 
         $pdo->exec("
-            INSERT INTO newplayers (playerid, flmid, lastname, firstname, pos) VALUES
+            INSERT INTO players (playerid, flmid, lastname, firstname, pos) VALUES
                 (100, 9100, 'Smith', 'John', 'RB'),
                 (101, 9101, 'Doe', 'Jane', 'WR')
         ");

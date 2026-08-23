@@ -9,7 +9,7 @@ if (isset($_REQUEST['teamid'])) {
 
 $sql = <<<EOD
 select p.firstname, p.lastname, p.pos, sum(ps.pts), r.teamid, t.name
-from newplayers p
+from players p
 join playerscores ps on p.playerid=ps.playerid
 left join roster r on p.playerid=r.playerid and r.dateoff is null
 join team t on t.teamid=$teamid
@@ -17,7 +17,7 @@ where ps.season=2011 and ps.week<=14 and r.teamid is null
 and p.pos not in (
 select p.pos
 from roster r
-join newplayers p on r.playerid=p.playerid
+join players p on r.playerid=p.playerid
 where r.dateoff is null
 and r.teamid=$teamid
 group by p.pos
@@ -29,7 +29,7 @@ EOD;
 
 $sql2 = <<<EOD
 select p.firstname, p.lastname, p.pos, sum(ps.pts), r.teamid, t.name
-from newplayers p
+from players p
 join playerscores ps on p.playerid=ps.playerid
 left join roster r on p.playerid=r.playerid and r.dateoff is null
 join team t on t.teamid=$teamid

@@ -2,7 +2,7 @@
 
 /**
 
- * Table Definition for newplayers
+ * Table Definition for players
 
  */
 
@@ -14,7 +14,7 @@ class DataObjects_Newplayers extends DB_DataObject
     ###START_AUTOCODE
     /* the code below is auto generated do not remove the above tag */
 
-    public $__table = 'newplayers';          // table name
+    public $__table = 'players';          // table name
     public $playerid;                        // int(11)  not_null primary_key auto_increment
     public $flmid;                           // int(11)  not_null unique_key
     public $lastname;                        // string(25)  not_null
