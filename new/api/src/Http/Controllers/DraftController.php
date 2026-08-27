@@ -99,6 +99,7 @@ final class DraftController
             // trusting the client's clock.
             'serverTime' => time(),
             'draftStartedAt' => $this->draftState->getFullStartTimestamp(),
+            'hangoutUrl' => $this->draftState->getHangoutUrl(),
         ]);
     }
 

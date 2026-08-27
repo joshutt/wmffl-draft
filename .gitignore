@@ -62,4 +62,6 @@ conf/wmffl.conf
 /logs/
 *.log
 *.ini
+*.ini.real
+*.ini.test
 .htaccess

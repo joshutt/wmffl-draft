@@ -111,4 +111,19 @@ final class CommishController
 
         Response::json(['ok' => true, 'undone' => $undone]);
     }
+
+    /** POST /api/commish/hangout-url {url} — replaces commish/updateurl.php */
+    public function setHangoutUrl(): void
+    {
+        Guard::requireCommish();
+
+        $body = Request::json();
+        $url = $body['url'] ?? null;
+        if (!is_string($url)) {
+            Response::error('url is required', 400);
+        }
+
+        $this->commish->setHangoutUrl($url);
+        Response::json(['ok' => true]);
+    }
 }

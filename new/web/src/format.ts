@@ -7,6 +7,15 @@ export function formatClock(totalSeconds: number): string {
   return `${min}:${String(sec).padStart(2, '0')}`
 }
 
+/**
+ * Hangout URL → an `href`. The stored value is bare (e.g.
+ * `meet.google.com/abc-defg-hij`, matching legacy's `draft.hangout.url`
+ * config value), but tolerate a scheme already being present.
+ */
+export function hangoutHref(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`
+}
+
 /** Player position/NFL-team suffix, e.g. "(RB – GB)". */
 export function posTeam(pos: string | null, nflTeam: string | null): string {
   const parts = [pos, nflTeam].filter(Boolean)

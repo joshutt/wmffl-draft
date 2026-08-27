@@ -41,6 +41,7 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
   const [autoPos, setAutoPos] = useState('*')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [hangoutInput, setHangoutInput] = useState<string | null>(null)
 
   const loadStatus = useCallback(async () => {
     try {
@@ -60,6 +61,15 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
 
     return () => clearInterval(timer)
   }, [loadStatus])
+
+  // Seed the hangout-url field from the server once, the first time the
+  // board loads — not on every poll, so it doesn't clobber the commish
+  // mid-edit (see saveHangoutUrl, which pushes local edits back to state).
+  useEffect(() => {
+    if (hangoutInput === null && board !== null) {
+      setHangoutInput(board.hangoutUrl ?? '')
+    }
+  }, [board, hangoutInput])
 
   const run = async (label: string, action: () => Promise<unknown>) => {
     setBusy(true)
@@ -98,6 +108,13 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
     }
   }
 
+  const saveHangoutUrl = () => {
+    if (hangoutInput === null) {
+      return
+    }
+    run('Hangout link updated', () => api.setHangoutUrl(hangoutInput)).catch(() => {})
+  }
+
   const autoPick = (owner: OwnerStatus) => {
     const posLabel = autoPos === '*' ? 'best available' : autoPos
     if (!window.confirm(`Auto-pick (${posLabel}) for ${owner.teamName}?`)) {
@@ -120,48 +137,65 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
 
   return (
     <div className="commish-layout">
-      <section className="card">
-        <h2 className="card-title">Draft Controls</h2>
-        {board === null ? (
-          <p className="muted">Loading clock…</p>
-        ) : (
-          <>
-            <p className="commish-clock-status">
-              Clock is <strong>{board.clockRunning ? 'running' : 'stopped'}</strong>
-              {board.currentPick !== null && (
-                <>
-                  {' '}
-                  — {board.currentPick.teamName}{' '}
-                  <span className="muted">
-                    (round {board.currentPick.round}, pick {board.currentPick.pick})
-                  </span>
-                </>
+      <div className="commish-left">
+        <section className="card">
+          <h2 className="card-title">Draft Controls</h2>
+          {board === null ? (
+            <p className="muted">Loading clock…</p>
+          ) : (
+            <>
+              <p className="commish-clock-status">
+                Clock is <strong>{board.clockRunning ? 'running' : 'stopped'}</strong>
+                {board.currentPick !== null && (
+                  <>
+                    {' '}
+                    — {board.currentPick.teamName}{' '}
+                    <span className="muted">
+                      (round {board.currentPick.round}, pick {board.currentPick.pick})
+                    </span>
+                  </>
+                )}
+              </p>
+              <div className="commish-clock-big">{formatClock(displaySeconds)}</div>
+              <div className="commish-buttons">
+                <button
+                  type="button"
+                  className={`btn ${board.clockRunning ? 'btn-danger' : 'btn-primary'}`}
+                  onClick={toggleClock}
+                  disabled={busy || board.currentPick === null}
+                >
+                  {board.clockRunning ? 'Stop Clock' : 'Start Clock'}
+                </button>
+                <button type="button" className="btn" onClick={undo} disabled={busy}>
+                  Undo Pick
+                </button>
+                <button type="button" className="btn btn-danger" onClick={startDraft} disabled={busy}>
+                  Start Draft
+                </button>
+              </div>
+              {totalDraftSeconds !== null && (
+                <p className="muted">Total draft time: {formatClock(totalDraftSeconds)}</p>
               )}
-            </p>
-            <div className="commish-clock-big">{formatClock(displaySeconds)}</div>
-            <div className="commish-buttons">
-              <button
-                type="button"
-                className={`btn ${board.clockRunning ? 'btn-danger' : 'btn-primary'}`}
-                onClick={toggleClock}
-                disabled={busy || board.currentPick === null}
-              >
-                {board.clockRunning ? 'Stop Clock' : 'Start Clock'}
-              </button>
-              <button type="button" className="btn" onClick={undo} disabled={busy}>
-                Undo Pick
-              </button>
-              <button type="button" className="btn btn-danger" onClick={startDraft} disabled={busy}>
-                Start Draft
-              </button>
-            </div>
-            {totalDraftSeconds !== null && (
-              <p className="muted">Total draft time: {formatClock(totalDraftSeconds)}</p>
-            )}
-          </>
-        )}
-        {message !== null && <p className="pick-message">{message}</p>}
-      </section>
+            </>
+          )}
+          {message !== null && <p className="pick-message">{message}</p>}
+        </section>
+
+        <section className="card">
+          <h2 className="card-title">Google Hangout</h2>
+          <label className="hangout-url-row">
+            Meeting link
+            <input
+              type="text"
+              value={hangoutInput ?? ''}
+              placeholder="meet.google.com/abc-defg-hij"
+              onChange={(e) => setHangoutInput(e.target.value)}
+              onBlur={saveHangoutUrl}
+              disabled={busy}
+            />
+          </label>
+        </section>
+      </div>
 
       <section className="card">
         <h2 className="card-title">Owners</h2>

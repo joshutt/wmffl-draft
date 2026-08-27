@@ -66,6 +66,7 @@ $router->post('/commish/clock/start', $commish->startClock(...));
 $router->post('/commish/clock/stop', $commish->stopClock(...));
 $router->post('/commish/pick/auto', $commish->autoPick(...));
 $router->post('/commish/pick/undo', $commish->undoPick(...));
+$router->post('/commish/hangout-url', $commish->setHangoutUrl(...));
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $path = preg_replace('#^/api#', '', $path) ?: '/';

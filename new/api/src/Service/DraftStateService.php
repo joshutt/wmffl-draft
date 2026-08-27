@@ -23,6 +23,7 @@ class DraftStateService
     private const KEY_CLOCK_ALLOWED = 'draft.clock.allowed';
     private const KEY_TEAM_PREFIX = 'draft.team.';
     private const KEY_LOGIN_PREFIX = 'draft.login.';
+    private const KEY_HANGOUT_URL = 'draft.hangout.url';
 
     public function __construct(private readonly ConfigRepository $config = new ConfigRepository())
     {
@@ -148,5 +149,23 @@ class DraftStateService
         foreach (array_keys($this->getAllTeamRemainingSeconds()) as $teamId) {
             $this->setTeamRemainingSeconds($teamId, $seconds);
         }
+    }
+
+    /**
+     * The Google Meet/Hangout link shown on the board header — port of
+     * commish/updateurl.php + draft.php/index.php's "Join the Google
+     * Hangout" link. Stored, like the legacy value, without a scheme (e.g.
+     * `meet.google.com/abc-defg-hij`); null/empty means no link is set.
+     */
+    public function getHangoutUrl(): ?string
+    {
+        $value = $this->config->get(self::KEY_HANGOUT_URL);
+
+        return $value !== null && $value !== '' ? $value : null;
+    }
+
+    public function setHangoutUrl(string $url): void
+    {
+        $this->config->set(self::KEY_HANGOUT_URL, $url);
     }
 }

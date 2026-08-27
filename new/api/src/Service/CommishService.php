@@ -215,6 +215,20 @@ final class CommishService
     }
 
     /**
+     * Sets the Google Hangout/Meet link shown on the board header — port of
+     * commish/updateurl.php. Strips a leading scheme if the commish pastes a
+     * full URL, since the value is rendered with `https://` prepended (and
+     * legacy stored it bare, e.g. `meet.google.com/abc-defg-hij`).
+     */
+    public function setHangoutUrl(string $url): void
+    {
+        $url = trim($url);
+        $url = preg_replace('#^https?://#i', '', $url) ?? $url;
+
+        $this->draftState->setHangoutUrl($url);
+    }
+
+    /**
      * The roster-need heuristic from commish/autopick.php: fill empty
      * starter slots first (position-gated by round — no K before round 13,
      * no OL before round 10, TE/defense not in round 1...), then backups,

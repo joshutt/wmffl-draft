@@ -1,4 +1,5 @@
 import { ClockBar } from './components/ClockBar'
+import { hangoutHref } from './format'
 import { BoardPage } from './pages/BoardPage'
 import { CommishPage } from './pages/CommishPage'
 import { Link, usePath } from './router'
@@ -33,6 +34,16 @@ function Shell() {
             </Link>
           )}
         </nav>
+        {boardState.board?.hangoutUrl != null && (
+          <a
+            className="app-hangout-link"
+            href={hangoutHref(boardState.board.hangoutUrl)}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Join the Google Hangout
+          </a>
+        )}
         {session !== null && session.isin && (
           <span className="app-user">
             {session.name}

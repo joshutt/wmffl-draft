@@ -65,7 +65,9 @@ a:focus-visible {
 .app-header {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  flex-wrap: wrap;
+  row-gap: 0.4rem;
+  column-gap: 1.25rem;
   padding: 0.5rem 1rem;
   background: var(--nav-bg);
   color: #fff;
@@ -95,6 +97,20 @@ a:focus-visible {
 .app-nav a.active {
   color: var(--accent);
   background: rgba(255, 182, 18, 0.15);
+}
+
+.app-hangout-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+}
+
+.app-hangout-link:hover {
+  background: var(--accent);
+  color: var(--nav-bg);
 }
 
 .app-header .btn {
@@ -235,6 +251,12 @@ a:focus-visible {
   grid-template-columns: minmax(280px, 380px) 1fr;
   gap: 1rem;
   align-items: start;
+}
+
+.commish-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .commish-login {
@@ -582,6 +604,17 @@ tr.current-pick td {
 
 .auto-pos-row {
   margin-bottom: 0.6rem;
+}
+
+.hangout-url-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.hangout-url-row input {
+  width: 100%;
 }
 
 .presence-dot {

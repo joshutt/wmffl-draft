@@ -50,6 +50,7 @@ export interface Board {
   myHold: HoldPlayer | null
   serverTime: number
   draftStartedAt: number | null
+  hangoutUrl: string | null
 }
 
 export interface Player {
@@ -150,6 +151,8 @@ export const api = {
     request<{ ok: boolean; undone: { round: number; pick: number } }>('/api/commish/pick/undo', {
       method: 'POST',
     }),
+  setHangoutUrl: (url: string) =>
+    request<{ ok: boolean }>('/api/commish/hangout-url', { method: 'POST', body: JSON.stringify({ url }) }),
 }
 
 export function errorMessage(err: unknown): string {

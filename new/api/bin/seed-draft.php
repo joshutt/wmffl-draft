@@ -63,6 +63,7 @@ $insConf->execute(['draft.clock.maxTime', '900']);
 $insConf->execute(['draft.clock.addTime', '60']);
 $insConf->execute(['draft.clock.run', 'false']);
 $insConf->execute(['draft.start', 'false']);
+$insConf->execute(['draft.hangout.url', 'meet.google.com/seed-test-only']);
 foreach (array_keys($teamNames) as $teamId) {
     $insConf->execute(["draft.team.{$teamId}", '600']);
 }
