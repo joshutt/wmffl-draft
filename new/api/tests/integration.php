@@ -76,6 +76,29 @@ final class Client
     {
         return $this->call('POST', $path, $body);
     }
+
+    /** Multipart file upload — docs/auto-draft-spec.md §7's priority-list CSV endpoint. */
+    public function upload(string $path, string $filePath): array
+    {
+        $ch = curl_init($this->base . $path);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_COOKIEJAR => $this->cookieFile,
+            CURLOPT_COOKIEFILE => $this->cookieFile,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_POSTFIELDS => ['file' => new CURLFile($filePath, 'text/csv', 'priority.csv')],
+        ]);
+        $raw = curl_exec($ch);
+        if ($raw === false) {
+            fwrite(STDERR, "HTTP error uploading to {$path}: " . curl_error($ch) . "\n");
+            exit(2);
+        }
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        curl_close($ch);
+
+        return [$status, json_decode((string) $raw, true)];
+    }
 }
 
 $passCount = 0;
@@ -290,6 +313,42 @@ check($statuses === [200, 409], 'simultaneous picks: exactly one 200, one 409', 
 [, $board] = $o1->get('/api/draft/board');
 $pick16 = array_values(array_filter($board['picks'], fn($p) => $p['round'] === 1 && $p['pick'] === 6))[0];
 check($pick16['playerId'] === $target, 'the winning submission filled pick 1.6 exactly once');
+
+// -------------------------------------------------- auto-draft priority
+section('Auto-draft priority list (spec §7)');
+[$status] = $o1->get('/api/commish/autodraft/priority');
+check($status === 403, 'non-commish blocked from priority list');
+
+// Seeded players are named "<pos>man<n>" with a single generic firstname
+// ("Player"), so ranking the first few of each position gives every
+// eligible position a match regardless of which one the weighted roll
+// picks — see bin/seed-draft.php.
+$csvPath = tempnam(sys_get_temp_dir(), 'wmffl-priority-') . '.csv';
+$csvLines = ["pos,rank,firstname,lastname"];
+foreach (['QB', 'RB', 'WR', 'TE', 'K', 'OL', 'DL', 'LB', 'DB'] as $pos) {
+    for ($n = 1; $n <= 5; $n++) {
+        $csvLines[] = "{$pos},{$n},Player,{$pos}man{$n}";
+    }
+}
+$csvLines[] = 'RB,99,Nobody,Unmatchable'; // deliberately unmatched — must land in "pending"
+file_put_contents($csvPath, implode("\n", $csvLines) . "\n");
+
+[$status, $data] = $commish->upload('/api/commish/autodraft/priority', $csvPath);
+check(
+    $status === 200 && ($data['imported'] ?? 0) === 45 && count($data['pending'] ?? []) === 1,
+    '45 rows imported, 1 unmatched row pending',
+    $data,
+);
+check(($data['counts']['RB'] ?? 0) === 5, 'RB list shows 5 matched entries', $data['counts'] ?? null);
+unlink($csvPath);
+
+[$status, $data] = $commish->get('/api/commish/autodraft/priority');
+check(
+    $status === 200 && ($data['counts']['K'] ?? 0) === 5
+        && ($data['pending'][0]['name'] ?? '') === 'Nobody Unmatchable',
+    'priority list summary shows counts and the pending row',
+    $data,
+);
 
 // ------------------------------------------------------- commish console
 section('Commish clock / undo / auto-pick');

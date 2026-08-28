@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Db;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AutoDraftController;
 use App\Http\Controllers\CommishController;
 use App\Http\Controllers\DraftController;
 use App\Http\Controllers\PlayerController;
@@ -67,6 +68,12 @@ $router->post('/commish/clock/stop', $commish->stopClock(...));
 $router->post('/commish/pick/auto', $commish->autoPick(...));
 $router->post('/commish/pick/undo', $commish->undoPick(...));
 $router->post('/commish/hangout-url', $commish->setHangoutUrl(...));
+
+// Auto-draft priority lists — replaces nothing legacy, new for
+// docs/auto-draft-spec.md §7
+$autoDraft = new AutoDraftController();
+$router->post('/commish/autodraft/priority', $autoDraft->upload(...));
+$router->get('/commish/autodraft/priority', $autoDraft->show(...));
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $path = preg_replace('#^/api#', '', $path) ?: '/';

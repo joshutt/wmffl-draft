@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 abstract class DbTestCase extends TestCase
 {
     private const TABLES = [
-        'draftPickHold', 'draftclockstop', 'roster', 'draftpicks',
+        'autodraft_priority', 'draftPickHold', 'draftclockstop', 'roster', 'draftpicks',
         'nflrosters', 'players', 'teamnames', 'config', 'weekmap', 'user',
         'owners', 'playerscores', 'nflbyes',
     ];
