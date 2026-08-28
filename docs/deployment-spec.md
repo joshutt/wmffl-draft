@@ -2,6 +2,33 @@
 
 Status: **proposal, not adopted.** Current deploy mechanism for the Aug 29, 2026 draft remains `git pull` on the server, per `docs/modernization-spec.md` §3/§7/§9. This doc captures a CI/CD alternative discussed 2026-08-04, to be evaluated later — not before the go/no-go checkpoint (~Aug 24-25).
 
+## Manual DDL step: `autodraft_priority` (docs/auto-draft-spec.md §6/§10)
+
+The repo has no migration system, and `new/api/tests/schema.sql` is explicitly
+not one — it's only ever applied wholesale to the local PHPUnit test DB. The
+`autodraft_priority` table added for the auto-draft redesign **must be
+created by hand** on staging and production before cutover:
+
+```sql
+CREATE TABLE autodraft_priority (
+  id        INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  pos       VARCHAR(2)  NOT NULL,
+  rank      INT         NOT NULL,
+  playerid  INT NULL,
+  firstname VARCHAR(25) NULL,
+  lastname  VARCHAR(25) NOT NULL,
+  UNIQUE KEY uq_pos_rank (pos, rank),
+  KEY idx_pos_rank (pos, rank)
+) ENGINE=InnoDB;
+```
+
+Run this once against each environment's live database (same access path as
+any other manual server-side step in this doc's baseline — SSH + the DB
+client). `new/api/config/autodraft.json` deploys automatically with the
+normal `git pull` since it's tracked in git (unlike `db.ini`), but the
+priority-list feature will 500 on any environment missing this table until
+it's applied.
+
 ## Current state (baseline)
 
 - Deploy is `git pull` run manually on the server for both staging and prod.

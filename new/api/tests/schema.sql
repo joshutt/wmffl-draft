@@ -4,6 +4,7 @@
 -- can't be meaningfully verified with mocks. Column shapes mirror
 -- src/lib/DataObjects/*.php.
 
+DROP TABLE IF EXISTS autodraft_priority;
 DROP TABLE IF EXISTS draftPickHold;
 DROP TABLE IF EXISTS draftclockstop;
 DROP TABLE IF EXISTS roster;
@@ -127,4 +128,18 @@ CREATE TABLE nflbyes (
     week INT NOT NULL,
     nflteam VARCHAR(3) NOT NULL,
     PRIMARY KEY (season, nflteam)
+) ENGINE=InnoDB;
+
+-- docs/auto-draft-spec.md §6. No migration system exists — this DDL must
+-- also be applied by hand to staging and production before cutover; see
+-- docs/deployment-spec.md.
+CREATE TABLE autodraft_priority (
+    id        INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    pos       VARCHAR(2)  NOT NULL,
+    rank      INT         NOT NULL,
+    playerid  INT NULL,          -- NULL = pending, unmatched
+    firstname VARCHAR(25) NULL,  -- as uploaded, kept for re-matching
+    lastname  VARCHAR(25) NOT NULL,
+    UNIQUE KEY uq_pos_rank (pos, rank),
+    KEY idx_pos_rank (pos, rank)
 ) ENGINE=InnoDB;

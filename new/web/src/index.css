@@ -617,6 +617,29 @@ tr.current-pick td {
   width: 100%;
 }
 
+.priority-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+
+.priority-counts-table th,
+.priority-counts-table td {
+  text-align: center;
+}
+
+.priority-pending {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.priority-pending ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1.1rem;
+}
+
 .presence-dot {
   display: inline-block;
   width: 0.85rem;

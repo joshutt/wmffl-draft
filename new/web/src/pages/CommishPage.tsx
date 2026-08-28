@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, errorMessage, type OwnerStatus } from '../api'
+import { api, errorMessage, type OwnerStatus, type PriorityListSummary } from '../api'
 import { LoginCard } from '../components/LoginCard'
 import { formatClock } from '../format'
 import { useSession } from '../session'
@@ -42,6 +42,9 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [hangoutInput, setHangoutInput] = useState<string | null>(null)
+  const [prioritySummary, setPrioritySummary] = useState<PriorityListSummary | null>(null)
+  const [priorityError, setPriorityError] = useState<string | null>(null)
+  const [priorityFile, setPriorityFile] = useState<File | null>(null)
 
   const loadStatus = useCallback(async () => {
     try {
@@ -53,14 +56,25 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
     }
   }, [])
 
+  const loadPriorityList = useCallback(async () => {
+    try {
+      setPrioritySummary(await api.priorityList())
+      setPriorityError(null)
+    } catch (err) {
+      setPriorityError(errorMessage(err))
+    }
+  }, [])
+
   useEffect(() => {
     loadStatus().catch(() => {})
+    loadPriorityList().catch(() => {})
     const timer = setInterval(() => {
       loadStatus().catch(() => {})
+      loadPriorityList().catch(() => {})
     }, STATUS_POLL_MS)
 
     return () => clearInterval(timer)
-  }, [loadStatus])
+  }, [loadStatus, loadPriorityList])
 
   // Seed the hangout-url field from the server once, the first time the
   // board loads — not on every poll, so it doesn't clobber the commish
@@ -113,6 +127,23 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
       return
     }
     run('Hangout link updated', () => api.setHangoutUrl(hangoutInput)).catch(() => {})
+  }
+
+  const uploadPriorityList = () => {
+    if (priorityFile === null) {
+      return
+    }
+    const file = priorityFile
+    run('Priority list imported', async () => {
+      const result = await api.uploadPriorityList(file)
+      setPrioritySummary(result)
+      setMessage(
+        result.pending.length > 0
+          ? `Imported ${result.imported} row(s), ${result.pending.length} pending`
+          : `Imported ${result.imported} row(s)`,
+      )
+    }).catch(() => {})
+    setPriorityFile(null)
   }
 
   const autoPick = (owner: OwnerStatus) => {
@@ -194,6 +225,61 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
               disabled={busy}
             />
           </label>
+        </section>
+
+        <section className="card">
+          <h2 className="card-title">Auto-Draft Priority Lists</h2>
+          {priorityError !== null && <p className="error-text">{priorityError}</p>}
+          <div className="priority-upload-row">
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => setPriorityFile(e.target.files?.[0] ?? null)}
+              disabled={busy}
+            />
+            <button
+              type="button"
+              className="btn btn-small"
+              onClick={uploadPriorityList}
+              disabled={busy || priorityFile === null}
+            >
+              Upload CSV
+            </button>
+          </div>
+          {prioritySummary !== null && (
+            <>
+              <table className="priority-counts-table">
+                <thead>
+                  <tr>
+                    {POSITIONS.map((p) => (
+                      <th key={p}>{p}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    {POSITIONS.map((p) => (
+                      <td key={p} className="num">
+                        {prioritySummary.counts[p] ?? 0}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+              {prioritySummary.pending.length > 0 && (
+                <div className="priority-pending">
+                  <p className="muted">Unmatched rows ({prioritySummary.pending.length}):</p>
+                  <ul>
+                    {prioritySummary.pending.map((row, i) => (
+                      <li key={i}>
+                        {row.pos} #{row.rank} — {row.name} ({row.reason})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
         </section>
       </div>
 

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Config\AutoDraftConfig;
 use App\Db;
 use App\Exception\PickConflictException;
 use App\Exception\PlayerNotFoundException;
 use App\Repository\ClockStopRepository;
 use App\Repository\DraftPickRepository;
 use App\Repository\OwnerRepository;
-use App\Repository\PlayerRepository;
+use App\Repository\PriorityListRepository;
 use App\Repository\RosterRepository;
 use Throwable;
 
@@ -29,7 +30,7 @@ final class CommishService
     public function __construct(
         private readonly DraftPickRepository $draftPicks = new DraftPickRepository(),
         private readonly RosterRepository $roster = new RosterRepository(),
-        private readonly PlayerRepository $players = new PlayerRepository(),
+        private readonly PriorityListRepository $priorityLists = new PriorityListRepository(),
         private readonly ClockStopRepository $clockStops = new ClockStopRepository(),
         private readonly OwnerRepository $owners = new OwnerRepository(),
         private readonly DraftStateService $draftState = new DraftStateService(),
@@ -177,31 +178,40 @@ final class CommishService
     }
 
     /**
-     * Force-picks the best available player for a team — port of
-     * commish/autopick.php. With an explicit $pos the choice is simply the
-     * top scorer at that position; otherwise the roster-need heuristic picks
-     * the position set (see positionNeeds()). Scoring uses last season's
-     * points, weeks 1-14, random tiebreak.
+     * Force-picks a player for a team — replaces commish/autopick.php's
+     * roster-need heuristic with the configuration-driven algorithm in
+     * AutoDraftService (docs/auto-draft-spec.md §4/§8). With an explicit
+     * $pos (the commish's per-row dropdown) the choice is simply the first
+     * available player on that position's priority list, ignoring weights
+     * and allocations; otherwise AutoDraftService::selectPlayer() runs the
+     * full weighted-position algorithm.
      *
      * Like the legacy flow (autopick.php routing through setPick.php), the
      * pick is made immediately if the team is on the clock, and queued as
-     * the team's preselection hold otherwise.
+     * the team's preselection hold otherwise — this REPLACE INTO silently
+     * overwrites any preselection that owner had already queued, which is
+     * pre-existing behavior, not new (docs/auto-draft-spec.md §8).
      *
      * @return array{playerId:int,queued:bool}
      * @throws PickConflictException|PlayerNotFoundException
      */
     public function autoPick(int $season, int $teamId, ?string $pos): array
     {
-        if ($pos !== null) {
-            $positions = [$pos];
-        } else {
-            $positions = $this->positionNeeds($teamId, $season);
+        $maxRound = $this->draftPicks->maxRound($season);
+        if ($maxRound === null) {
+            throw new PlayerNotFoundException("No draft picks found for season {$season}");
         }
 
-        $playerId = $this->players->findBestAvailableByScore($season - 1, $positions);
-        if ($playerId === null) {
-            throw new PlayerNotFoundException('No available player matches the auto-pick criteria');
-        }
+        $autoDraft = new AutoDraftService(
+            AutoDraftConfig::load($maxRound),
+            $this->roster,
+            $this->draftPicks,
+            $this->priorityLists,
+        );
+
+        $playerId = $pos !== null
+            ? $autoDraft->selectPlayerAtPosition($pos)
+            : $autoDraft->selectPlayer($season, $teamId);
 
         if ($this->clock->getTeamOnClock($season) === $teamId) {
             $this->pickService->submitPick($teamId, $playerId, $season);
@@ -226,52 +236,5 @@ final class CommishService
         $url = preg_replace('#^https?://#i', '', $url) ?? $url;
 
         $this->draftState->setHangoutUrl($url);
-    }
-
-    /**
-     * The roster-need heuristic from commish/autopick.php: fill empty
-     * starter slots first (position-gated by round — no K before round 13,
-     * no OL before round 10, TE/defense not in round 1...), then backups,
-     * else anyone. Returns null for "no position restriction".
-     *
-     * @return list<string>|null
-     */
-    private function positionNeeds(int $teamId, int $season): ?array
-    {
-        $counts = $this->roster->countActiveByPosition($teamId);
-        $round = $this->draftPicks->minOpenRoundForTeam($teamId, $season) ?? 0;
-
-        $starters = [];
-        $backups = [];
-
-        foreach (['QB', 'RB', 'WR', 'TE', 'K', 'OL', 'DL', 'LB', 'DB'] as $pos) {
-            $have = $counts[$pos] ?? 0;
-
-            [$want, $gateRound] = match ($pos) {
-                'QB' => [1, 0],
-                'TE' => [1, 2],
-                'K' => [1, 12],
-                'OL' => [1, 9],
-                'RB', 'WR' => [2, 0],
-                'DL', 'LB', 'DB' => [2, 2],
-            };
-
-            if ($have < $want && $round > $gateRound) {
-                $starters[] = $pos;
-            } elseif ($have === $want && $pos !== 'K' && $pos !== 'OL') {
-                // Legacy only tracks backups for QB/TE/RB/WR/DL/LB/DB — the
-                // K and OL cases fall through without a backup branch.
-                $backups[] = $pos;
-            }
-        }
-
-        if ($starters !== []) {
-            return $starters;
-        }
-        if ($backups !== []) {
-            return $backups;
-        }
-
-        return null;
     }
 }

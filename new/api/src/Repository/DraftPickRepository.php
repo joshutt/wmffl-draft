@@ -136,6 +136,21 @@ class DraftPickRepository
     }
 
     /**
+     * The highest round number in this season's draft — used by
+     * AutoDraftConfig::load() to confirm the committed weight grid covers
+     * every round before an auto-pick can rely on it
+     * (docs/auto-draft-spec.md §5).
+     */
+    public function maxRound(int $season): ?int
+    {
+        $stmt = Db::connection()->prepare('SELECT MAX(Round) FROM draftpicks WHERE Season = ?');
+        $stmt->execute([$season]);
+        $round = $stmt->fetchColumn();
+
+        return $round === false || $round === null ? null : (int) $round;
+    }
+
+    /**
      * Every pick for the season, in round/pick order, joined with the
      * picking team's name and (when filled) the selected player's info.
      * Backs GET /api/draft/board — replaces picks.php's per-row DataObjects

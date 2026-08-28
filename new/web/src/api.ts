@@ -90,6 +90,22 @@ export interface AutoPickResult {
   player: HoldPlayer | null
 }
 
+export interface PriorityListPendingRow {
+  pos: string
+  rank: number
+  name: string
+  reason: string
+}
+
+export interface PriorityListSummary {
+  counts: Record<string, number>
+  pending: PriorityListPendingRow[]
+}
+
+export interface PriorityListImportResult extends PriorityListSummary {
+  imported: number
+}
+
 export class ApiError extends Error {
   readonly status: number
 
@@ -100,10 +116,14 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // FormData bodies (the priority-list CSV upload) set their own multipart
+  // boundary in the Content-Type header — forcing application/json here
+  // would destroy it, so only JSON bodies get the header.
+  const isFormData = init?.body instanceof FormData
   const res = await fetch(path, {
     credentials: 'same-origin',
     ...init,
-    headers: init?.body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: init?.body && !isFormData ? { 'Content-Type': 'application/json' } : undefined,
   })
 
   let data: unknown = null
@@ -153,6 +173,13 @@ export const api = {
     }),
   setHangoutUrl: (url: string) =>
     request<{ ok: boolean }>('/api/commish/hangout-url', { method: 'POST', body: JSON.stringify({ url }) }),
+
+  priorityList: () => request<PriorityListSummary>('/api/commish/autodraft/priority'),
+  uploadPriorityList: (file: File) => {
+    const body = new FormData()
+    body.append('file', file)
+    return request<PriorityListImportResult>('/api/commish/autodraft/priority', { method: 'POST', body })
+  },
 }
 
 export function errorMessage(err: unknown): string {

@@ -83,40 +83,6 @@ class PlayerRepository
     }
 
     /**
-     * The best available player by last season's total points (weeks 1-14),
-     * optionally restricted to a position set — port of commish/autopick.php's
-     * scoring query, RAND() tiebreak included.
-     *
-     * @param list<string>|null $positions null = any position
-     */
-    public function findBestAvailableByScore(int $scoreSeason, ?array $positions): ?int
-    {
-        $sql = "SELECT p.playerid
-                FROM players p
-                JOIN playerscores ps ON p.playerid = ps.playerid
-                LEFT JOIN roster r ON p.playerid = r.playerid AND r.dateoff IS NULL
-                LEFT JOIN nflrosters nr ON nr.playerid = p.playerid AND nr.dateoff IS NULL
-                WHERE ps.season = ? AND ps.week <= 14 AND r.teamid IS NULL
-                  AND p.pos <> 'HC' AND p.usePos = 1 AND p.pos <> ''
-                  AND nr.nflteamid IS NOT NULL";
-        $params = [$scoreSeason];
-
-        if ($positions !== null && $positions !== []) {
-            $placeholders = implode(',', array_fill(0, count($positions), '?'));
-            $sql .= " AND p.pos IN ({$placeholders})";
-            $params = [...$params, ...$positions];
-        }
-
-        $sql .= ' GROUP BY p.playerid ORDER BY SUM(ps.pts) DESC, RAND() LIMIT 1';
-
-        $stmt = Db::connection()->prepare($sql);
-        $stmt->execute($params);
-        $playerId = $stmt->fetchColumn();
-
-        return $playerId === false ? null : (int) $playerId;
-    }
-
-    /**
      * Player info for a preselection/hold display — mirrors the
      * lastname/firstname/pos/nflteamid concat used in loginA.php and
      * picks.php's preArray, but as structured fields instead of one string.
