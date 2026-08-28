@@ -29,6 +29,60 @@ normal `git pull` since it's tracked in git (unlike `db.ini`), but the
 priority-list feature will 500 on any environment missing this table until
 it's applied.
 
+## Webroot layout and `.htaccess` (discovered 2026-08-28)
+
+`.htaccess` is gitignored and hand-provisioned on every environment (see
+"Current state" below) — it exists nowhere in the repo, so its required
+contents are documented here instead. DocumentRoot for the new app must
+point at `new/web/dist/`, not the project root (keeps `.git/`,
+`new/api/vendor/`, `new/api/config/db.ini`, `new/api/tests/` — which
+includes the destructive `integration.php` — and `conf/wmffl.conf` all
+outside the served tree entirely, rather than relying on `.htaccess` deny
+rules to hide them). Required contents:
+
+```apache
+RewriteEngine On
+
+# API: internal rewrite (not a redirect) to the proxy front controller.
+# Do NOT point this at new/api/public/index.php directly — see the gotcha
+# below. new/api/public/index.php reads REQUEST_URI itself and strips the
+# /api prefix, so REQUEST_URI must be left intact; QSA preserves the query
+# string.
+RewriteRule ^api/(.*)$ api/index.php [L,QSA]
+
+# SPA: serve real files/directories as-is...
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# ...otherwise fall back to index.html for client-side routing.
+RewriteRule ^ index.html [L]
+
+Options -Indexes
+```
+
+**Gotcha: the rewrite target must stay inside DocumentRoot.** An earlier
+version of this rewrote straight to `../../api/public/index.php` (the real
+front controller, which lives outside `new/web/dist/`). On staging this
+produced a silent 500 on every `/api/*` request — including `/api/health`
+with no query params, before any app code ran — with no PHP-level error
+even with `display_errors` forced on, which is the signature of the
+webserver itself refusing to execute a script outside DocumentRoot
+(`open_basedir` or a suexec/suPHP-style restriction), not a PHP fault.
+Confirmed by dropping a trivial `ping.php` directly in `new/web/dist/`,
+which executed fine — isolating the failure to specifically the
+outside-docroot rewrite target, not PHP execution in general.
+
+The fix, now checked in: `new/web/public/api/index.php` is a proxy that
+`require`s the real front controller — Vite copies it into
+`new/web/dist/api/index.php` on every build (same mechanism as
+`favicon.svg`), so it's a normal PHP `require` from an already-executing,
+already-permitted script, which doesn't hit the same restriction. The
+`.htaccess` rewrite above points at this proxy (`api/index.php`), not the
+real front controller directly. Apply this exact rewrite on every
+environment (staging *and* prod) — don't rediscover this on prod during
+cutover.
+
 ## Current state (baseline)
 
 - Deploy is `git pull` run manually on the server for both staging and prod.
