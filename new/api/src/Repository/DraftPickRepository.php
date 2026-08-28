@@ -167,7 +167,7 @@ class DraftPickRepository
         $stmt = Db::connection()->prepare(
             'SELECT d.Round, d.Pick, d.teamid, t.name AS teamName,
                     d.playerid, p.firstname, p.lastname, p.pos,
-                    r.nflteamid, d.pickTime
+                    r.nflteamid, UNIX_TIMESTAMP(d.pickTime) AS pickTimeEpoch
              FROM draftpicks d
              JOIN teamnames t ON t.teamid = d.teamid AND t.season = d.Season
              LEFT JOIN players p ON p.playerid = d.playerid
@@ -188,7 +188,7 @@ class DraftPickRepository
                 'playerName' => $row['playerid'] !== null ? "{$row['firstname']} {$row['lastname']}" : null,
                 'playerPos' => $row['pos'],
                 'playerTeam' => $row['nflteamid'],
-                'pickTime' => $row['pickTime'] !== null ? strtotime((string) $row['pickTime']) : null,
+                'pickTime' => $row['pickTimeEpoch'] !== null ? (int) $row['pickTimeEpoch'] : null,
             ];
         }
 
@@ -201,9 +201,15 @@ class DraftPickRepository
      */
     public function maxPickTimestamp(): ?int
     {
-        $stmt = Db::connection()->query('SELECT MAX(pickTime) AS maxPickTime FROM draftpicks');
+        // UNIX_TIMESTAMP() is computed by MySQL using its own session
+        // timezone, so this is correct regardless of what PHP's
+        // date_default_timezone is set to — see the postmortem on the
+        // clock bug in docs/modernization-spec.md (fixed once already in
+        // Db.php by forcing PHP's tz to match MySQL's, which only holds as
+        // long as both happen to agree; this removes that dependency).
+        $stmt = Db::connection()->query('SELECT UNIX_TIMESTAMP(MAX(pickTime)) AS maxPickTime FROM draftpicks');
         $value = $stmt->fetchColumn();
 
-        return $value !== null && $value !== false ? strtotime((string) $value) : null;
+        return $value !== null && $value !== false ? (int) $value : null;
     }
 }

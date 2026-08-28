@@ -21,14 +21,13 @@ final class Db
     public static function connection(): PDO
     {
         if (self::$instance === null) {
-            // Match legacy's utils/start.php, which forces this same zone:
-            // MySQL's TIMESTAMP columns (draftpicks.pickTime) are stored/read
-            // in the server's SYSTEM zone (America/New_York), but PHP's
-            // default is UTC. Without this, strtotime() on a fetched
-            // TIMESTAMP string (DraftPickRepository::maxPickTimestamp()) is
-            // off by the zone offset, which silently breaks
-            // DraftClockService::getPreviousPickTime() — see the postmortem
-            // in docs/modernization-spec.md's clock bug notes.
+            // Kept for the parts of the app that still format PHP-side
+            // wall-clock strings for humans (e.g.
+            // DraftStateService::recordLoginHeartbeat()'s date('Y-m-d H:i:s')
+            // heartbeats) — those are written and read entirely in PHP, so
+            // they only need to be internally consistent, not matched to
+            // MySQL. Does NOT need to match MySQL's session timezone below;
+            // see that option's comment for why.
             date_default_timezone_set('America/New_York');
             self::$instance = self::connect(self::loadConfig());
         }
@@ -85,6 +84,22 @@ final class Db
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
+                // Pin every session to a fixed UTC offset rather than
+                // trusting the server's SYSTEM zone (or a named zone like
+                // 'America/New_York', which silently requires the
+                // mysql.time_zone_name tables to be loaded via
+                // mysql_tzinfo_to_sql — not guaranteed on every host, and a
+                // moving DST target even when it is). This is what let the
+                // clock-reset bug resurface on staging with byte-identical
+                // code: local and staging MySQL disagreed on SYSTEM tz, so
+                // strtotime()/UNIX_TIMESTAMP() landed on different epochs
+                // for the same stored TIMESTAMP. Repositories now read
+                // TIMESTAMP columns via UNIX_TIMESTAMP() in SQL (see
+                // DraftPickRepository, ClockStopRepository), which no longer
+                // depends on this — but pinning it here means any other
+                // query (ad hoc reports, a future repository) gets the same
+                // guarantee for free instead of re-discovering this bug.
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+00:00'",
             ]);
         } catch (PDOException $e) {
             throw new RuntimeException('Could not connect to database: ' . $e->getMessage(), previous: $e);
