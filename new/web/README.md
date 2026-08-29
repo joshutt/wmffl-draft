@@ -1,9 +1,11 @@
 # WMFFL Draft SPA (new/web)
 
 React + TypeScript + Vite front end for the draft rewrite
-(`docs/modernization-spec.md`). Two routes: `/` is the public draft board,
-`/commish` is the commissioner console. All data comes from the PHP JSON API
-in `new/api` via polling (no websockets, by design).
+(`docs/modernization-spec.md`). Three routes: `/` is the public draft board,
+`/commish` is the commissioner console, and `/announcer` is the voice-announcing
+board meant to be screen-shared into the draft-day video call
+(`docs/voice-announce-spec.md`). All data comes from the PHP JSON API in
+`new/api` via polling (no websockets, by design).
 
 ## Building
 
@@ -32,3 +34,11 @@ native mirror dir on WSL) — `vite.config.ts` proxies `/api` to :8080.
 
 `php new/api/tests/integration.php [base-url]` runs the full §4 parity
 checklist against a running API (destructive — seeded/staging DBs only).
+
+## Checks
+
+`npm run check:announce` exercises the announcer's pure logic — what it says,
+and what it decides still needs saying after a reload. No framework and no
+build step (Node strips the TypeScript types on import), so it runs straight
+from this directory even on the 9p mount. The audio path itself needs a
+browser and a real Polly call; see `docs/voice-announce-spec.md` §8.

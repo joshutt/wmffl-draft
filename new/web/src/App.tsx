@@ -1,5 +1,6 @@
 import { ClockBar } from './components/ClockBar'
 import { hangoutHref } from './format'
+import { AnnouncerPage } from './pages/AnnouncerPage'
 import { BoardPage } from './pages/BoardPage'
 import { CommishPage } from './pages/CommishPage'
 import { Link, usePath } from './router'
@@ -19,6 +20,15 @@ function Shell() {
   const boardState = useBoard()
   const { session, logout } = useSession()
   const onCommish = path.startsWith('/commish')
+  const onAnnouncer = path.startsWith('/announcer')
+
+  // The announcer window is screen-shared into the video call, so it gets no
+  // app chrome at all — no nav, no login strip, and its own larger status
+  // line in place of ClockBar (docs/voice-announce-spec.md §5.4). It still
+  // rides the same useBoard() poll as every other route.
+  if (onAnnouncer) {
+    return <AnnouncerPage boardState={boardState} />
+  }
 
   return (
     <>
@@ -29,9 +39,12 @@ function Shell() {
             Board
           </Link>
           {session?.commish === true && (
-            <Link to="/commish" className={onCommish ? 'active' : undefined}>
-              Commish
-            </Link>
+            <>
+              <Link to="/commish" className={onCommish ? 'active' : undefined}>
+                Commish
+              </Link>
+              <Link to="/announcer">Announcer</Link>
+            </>
           )}
         </nav>
         {boardState.board?.hangoutUrl != null && (

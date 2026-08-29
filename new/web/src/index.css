@@ -654,3 +654,184 @@ tr.current-pick td {
 .presence-dot.out {
   background: var(--bad);
 }
+
+/* ---------- voice announcer ---------- */
+
+.voice-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.voice-start-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.voice-start-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.voice-start-row input {
+  width: 4.5rem;
+}
+
+.voice-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+
+/* The /announcer route: its own full-height layout, since it renders
+   without the app header and is read across a room over a video call. */
+.announcer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 0.6rem;
+  gap: 0.6rem;
+}
+
+.announcer-status {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  background: var(--nav-bg);
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+}
+
+.announcer-headline {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.announcer-slot {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.announcer-slot.grow {
+  flex: 1 1 12rem;
+}
+
+.announcer-slot small {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nav-link);
+}
+
+.announcer-slot strong {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.announcer-slot .muted {
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 400;
+}
+
+.announcer-clock {
+  font-family: var(--mono);
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.announcer-clock.urgent {
+  color: #ff6b5e;
+}
+
+.announcer-paused {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nav-link);
+}
+
+/* The board fills whatever the status bar and controls leave behind. */
+.announcer-board {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.announcer-board .picks-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.announcer-board .picks-scroll {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
+.announcer-board .picks-table {
+  font-size: 1.15rem;
+}
+
+.announcer-board .picks-table td {
+  padding: 0.34rem 0.6rem;
+}
+
+.announcer-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+}
+
+.announcer-lamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.announcer-lamp::before {
+  content: '';
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--bad);
+}
+
+.announcer-lamp.live::before {
+  background: var(--good);
+}
+
+.announcer-said {
+  flex: 1 1 16rem;
+  min-width: 0;
+  color: var(--muted);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

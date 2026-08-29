@@ -8,3 +8,7 @@ port=3306
 dbname=
 username=
 password=
+
+[Voice_Values]
+pool_id=
+region=

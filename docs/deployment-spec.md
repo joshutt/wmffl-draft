@@ -90,6 +90,20 @@ cutover.
 - `new/api/vendor/` is not committed; `composer install` is run directly on the host over SSH after any pull that touches `composer.json`/`composer.lock`.
 - `.htaccess` and `new/api/config/db.ini` (and `conf/wmffl.conf` for the legacy app) are gitignored and pre-provisioned directly on the server, never deployed via git.
 
+### Per-host prerequisites that git does not deploy
+
+Because `db.ini` is gitignored, adding a section to it in the repo's
+`db.ini.default` does **not** put that section on any server — each host's copy
+has to be edited by hand. Currently required:
+
+- `[DB_Values]` — connection details, since the first deploy.
+- `[Voice_Values]` — `pool_id` and `region` for the voice announcer
+  (`docs/voice-announce-spec.md` §3). Without it the announcer page and the
+  commish console's Voice Announcer panel both show a "missing [Voice_Values]"
+  message and no announcements play; nothing else is affected. The Cognito
+  identity pool must allow unauthenticated identities, and its unauth IAM role
+  needs `polly:SynthesizeSpeech`.
+
 This baseline was chosen deliberately for the timeline: fewer moving parts to debug during a 25-day rewrite of a live multi-user event, at the cost of the manual "did you rebuild" step above.
 
 ## Proposed alternative: GitHub Actions CI/CD

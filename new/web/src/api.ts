@@ -106,6 +106,23 @@ export interface PriorityListImportResult extends PriorityListSummary {
   imported: number
 }
 
+export interface VoiceSettings {
+  enabled: boolean
+  voiceId: string
+  startRound: number
+  startPick: number
+  /** null when the host's db.ini has no usable [Voice_Values] — see configError */
+  poolId: string | null
+  region: string | null
+  voices: string[]
+  configError: string | null
+}
+
+/** Every field of VoiceSettings the commish console is allowed to write. */
+export type VoiceSettingsPatch = Partial<
+  Pick<VoiceSettings, 'enabled' | 'voiceId' | 'startRound' | 'startPick'>
+>
+
 export class ApiError extends Error {
   readonly status: number
 
@@ -173,6 +190,10 @@ export const api = {
     }),
   setHangoutUrl: (url: string) =>
     request<{ ok: boolean }>('/api/commish/hangout-url', { method: 'POST', body: JSON.stringify({ url }) }),
+
+  voiceSettings: () => request<VoiceSettings>('/api/commish/voice'),
+  saveVoiceSettings: (patch: VoiceSettingsPatch) =>
+    request<VoiceSettings>('/api/commish/voice', { method: 'POST', body: JSON.stringify(patch) }),
 
   priorityList: () => request<PriorityListSummary>('/api/commish/autodraft/priority'),
   uploadPriorityList: (file: File) => {
