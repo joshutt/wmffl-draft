@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, errorMessage, type OwnerStatus, type PriorityListSummary } from '../api'
+import {
+  api,
+  errorMessage,
+  type OwnerStatus,
+  type PriorityListSummary,
+  type VoiceSettings,
+  type VoiceSettingsPatch,
+} from '../api'
 import { LoginCard } from '../components/LoginCard'
 import { formatClock } from '../format'
 import { useSession } from '../session'
@@ -45,6 +52,9 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
   const [prioritySummary, setPrioritySummary] = useState<PriorityListSummary | null>(null)
   const [priorityError, setPriorityError] = useState<string | null>(null)
   const [priorityFile, setPriorityFile] = useState<File | null>(null)
+  const [voice, setVoice] = useState<VoiceSettings | null>(null)
+  const [voiceError, setVoiceError] = useState<string | null>(null)
+  const [voiceStart, setVoiceStart] = useState<{ round: string; pick: string } | null>(null)
 
   const loadStatus = useCallback(async () => {
     try {
@@ -64,6 +74,26 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
       setPriorityError(errorMessage(err))
     }
   }, [])
+
+  // Loaded once, not polled: this page is the only writer, so its own state
+  // is authoritative, and polling would fight the commish's typing in the
+  // start round/pick fields the same way it would in the hangout URL field.
+  const loadVoice = useCallback(async () => {
+    try {
+      const settings = await api.voiceSettings()
+      setVoice(settings)
+      setVoiceStart((current) =>
+        current ?? { round: String(settings.startRound), pick: String(settings.startPick) },
+      )
+      setVoiceError(null)
+    } catch (err) {
+      setVoiceError(errorMessage(err))
+    }
+  }, [])
+
+  useEffect(() => {
+    loadVoice().catch(() => {})
+  }, [loadVoice])
 
   useEffect(() => {
     loadStatus().catch(() => {})
@@ -100,7 +130,12 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
   }
 
   const startDraft = () => {
-    if (window.confirm('Start the draft? This resets every team clock to the full budget.')) {
+    if (
+      window.confirm(
+        'Start the draft? This resets every team clock to the full budget, and restarts voice ' +
+          'announcing from the start round/pick set below.',
+      )
+    ) {
       run('Draft started', api.startDraft).catch(() => {})
     }
   }
@@ -144,6 +179,34 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
       )
     }).catch(() => {})
     setPriorityFile(null)
+  }
+
+  const saveVoice = (patch: VoiceSettingsPatch, label: string) => {
+    run(label, async () => {
+      // The POST returns the full settings, so the response is the new
+      // authoritative state — no refetch needed.
+      setVoice(await api.saveVoiceSettings(patch))
+    }).catch(() => {})
+  }
+
+  const saveVoiceStart = () => {
+    if (voice === null || voiceStart === null) {
+      return
+    }
+
+    const round = Number.parseInt(voiceStart.round, 10)
+    const pick = Number.parseInt(voiceStart.pick, 10)
+    if (!Number.isFinite(round) || !Number.isFinite(pick) || round < 1 || pick < 1) {
+      // Snap the fields back rather than posting something the API will
+      // reject — a half-typed value shouldn't become an error banner.
+      setVoiceStart({ round: String(voice.startRound), pick: String(voice.startPick) })
+      return
+    }
+    if (round === voice.startRound && pick === voice.startPick) {
+      return
+    }
+
+    saveVoice({ startRound: round, startPick: pick }, `Announcing from round ${round}, pick ${pick}`)
   }
 
   const autoPick = (owner: OwnerStatus) => {
@@ -225,6 +288,85 @@ function CommishConsole({ boardState }: { boardState: BoardState }) {
               disabled={busy}
             />
           </label>
+        </section>
+
+        <section className="card">
+          <h2 className="card-title">Voice Announcer</h2>
+          {voiceError !== null && <p className="error-text">{voiceError}</p>}
+          {voice === null || voiceStart === null ? (
+            <p className="muted">Loading…</p>
+          ) : (
+            <>
+              <label className="voice-row">
+                <input
+                  type="checkbox"
+                  checked={voice.enabled}
+                  disabled={busy}
+                  onChange={(e) =>
+                    saveVoice(
+                      { enabled: e.target.checked },
+                      e.target.checked ? 'Announcements on' : 'Announcements off',
+                    )
+                  }
+                />
+                Announce picks aloud
+              </label>
+
+              <label className="voice-row">
+                Voice
+                <select
+                  value={voice.voiceId}
+                  disabled={busy}
+                  onChange={(e) => saveVoice({ voiceId: e.target.value }, `Voice: ${e.target.value}`)}
+                >
+                  {voice.voices.map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="voice-start-row">
+                <label>
+                  Start at round
+                  <input
+                    type="number"
+                    min={1}
+                    value={voiceStart.round}
+                    disabled={busy}
+                    onChange={(e) => setVoiceStart({ ...voiceStart, round: e.target.value })}
+                    onBlur={saveVoiceStart}
+                  />
+                </label>
+                <label>
+                  pick
+                  <input
+                    type="number"
+                    min={1}
+                    value={voiceStart.pick}
+                    disabled={busy}
+                    onChange={(e) => setVoiceStart({ ...voiceStart, pick: e.target.value })}
+                    onBlur={saveVoiceStart}
+                  />
+                </label>
+              </div>
+              <p className="muted">
+                Where announcing resumes if the announcer window has to be reloaded.
+              </p>
+
+              <div className="voice-footer">
+                <a className="btn btn-small" href="/announcer" target="_blank" rel="noreferrer">
+                  Open Announcer ↗
+                </a>
+                {voice.configError !== null ? (
+                  <span className="error-text">{voice.configError}</span>
+                ) : (
+                  <span className="muted">Polly via {voice.region} — pool configured</span>
+                )}
+              </div>
+            </>
+          )}
         </section>
 
         <section className="card">

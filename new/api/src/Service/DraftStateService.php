@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Domain\PollyVoice;
 use App\Repository\ConfigRepository;
 
 /**
@@ -24,6 +25,10 @@ class DraftStateService
     private const KEY_TEAM_PREFIX = 'draft.team.';
     private const KEY_LOGIN_PREFIX = 'draft.login.';
     private const KEY_HANGOUT_URL = 'draft.hangout.url';
+    private const KEY_VOICE_ENABLED = 'draft.voice.enabled';
+    private const KEY_VOICE_ID = 'draft.voice.voiceId';
+    private const KEY_VOICE_START_ROUND = 'draft.voice.startRound';
+    private const KEY_VOICE_START_PICK = 'draft.voice.startPick';
 
     public function __construct(private readonly ConfigRepository $config = new ConfigRepository())
     {
@@ -167,5 +172,51 @@ class DraftStateService
     public function setHangoutUrl(string $url): void
     {
         $this->config->set(self::KEY_HANGOUT_URL, $url);
+    }
+
+    /**
+     * The voice-announcer settings the commish console controls — see
+     * docs/voice-announce-spec.md §3. Defaults are applied per-key, so a
+     * database that has never seen this feature reads as "off, Matthew,
+     * round 1 pick 1" rather than erroring or returning nulls.
+     *
+     * `enabled` defaults to false on purpose: the announcer must never start
+     * talking on its own on a database where nobody turned it on.
+     *
+     * @return array{enabled:bool,voiceId:string,startRound:int,startPick:int}
+     */
+    public function getVoiceSettings(): array
+    {
+        $voiceId = $this->config->get(self::KEY_VOICE_ID);
+
+        return [
+            'enabled' => $this->config->get(self::KEY_VOICE_ENABLED) === 'true',
+            // Guard against a value written before a voice was retired from
+            // the whitelist — fall back rather than handing Polly a voice it
+            // will reject for every announcement of the draft.
+            'voiceId' => PollyVoice::tryFrom((string) $voiceId)?->value ?? PollyVoice::DEFAULT->value,
+            'startRound' => max(1, (int) ($this->config->get(self::KEY_VOICE_START_ROUND) ?? 1)),
+            'startPick' => max(1, (int) ($this->config->get(self::KEY_VOICE_START_PICK) ?? 1)),
+        ];
+    }
+
+    public function setVoiceEnabled(bool $enabled): void
+    {
+        $this->config->set(self::KEY_VOICE_ENABLED, $enabled ? 'true' : 'false');
+    }
+
+    public function setVoiceId(PollyVoice $voice): void
+    {
+        $this->config->set(self::KEY_VOICE_ID, $voice->value);
+    }
+
+    /**
+     * The floor the announcer starts speaking from — the commish's escape
+     * hatch after reloading the announcer page mid-draft.
+     */
+    public function setVoiceStart(int $round, int $pick): void
+    {
+        $this->config->set(self::KEY_VOICE_START_ROUND, (string) max(1, $round));
+        $this->config->set(self::KEY_VOICE_START_PICK, (string) max(1, $pick));
     }
 }

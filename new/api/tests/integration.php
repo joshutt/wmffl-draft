@@ -415,6 +415,60 @@ check(
 $team1Clock = array_values(array_filter($board['teamClocks'], fn($t) => $t['teamId'] === 1))[0];
 check($team1Clock['seconds'] <= 660, 'team clocks reflect adjustClock deductions', $team1Clock);
 
+// ----------------------------------------------------- voice announcer
+section('Voice announcer settings');
+[$status] = $anon->get('/api/commish/voice');
+check($status === 401, 'voice settings require login');
+[$status] = $o8->get('/api/commish/voice');
+check($status === 403, 'non-commish blocked from voice settings with 403');
+
+[$status, $data] = $commish->get('/api/commish/voice');
+check(
+    $status === 200 && $data['enabled'] === false && $data['voiceId'] === 'Matthew',
+    'voice settings default to off / Matthew',
+    $data,
+);
+check(
+    is_array($data['voices'] ?? null) && in_array('Joanna', $data['voices'], true),
+    'voice whitelist is published to the console',
+    $data['voices'] ?? null,
+);
+check(
+    array_key_exists('poolId', $data) && array_key_exists('region', $data),
+    'response carries the Cognito pool/region for the announcer page',
+);
+
+[$status, $data] = $commish->post('/api/commish/voice', ['enabled' => true, 'voiceId' => 'Joanna']);
+check(
+    $status === 200 && $data['enabled'] === true && $data['voiceId'] === 'Joanna',
+    'commish can enable announcements and pick a voice',
+    $data,
+);
+
+[$status, $data] = $commish->post('/api/commish/voice', ['startRound' => 3, 'startPick' => 7]);
+check(
+    $status === 200 && $data['startRound'] === 3 && $data['startPick'] === 7 && $data['voiceId'] === 'Joanna',
+    'partial update sets the start slot without clobbering the voice',
+    $data,
+);
+
+[$status, $data] = $commish->post('/api/commish/voice', ['voiceId' => 'Brian']);
+check($status === 400, 'unknown Polly voice rejected with 400', $data);
+[$status] = $commish->post('/api/commish/voice', ['startRound' => 0]);
+check($status === 400, 'startRound below 1 rejected with 400');
+[$status] = $commish->post('/api/commish/voice', ['enabled' => 'yes']);
+check($status === 400, 'non-boolean enabled rejected with 400');
+
+[, $data] = $commish->get('/api/commish/voice');
+check(
+    $data['voiceId'] === 'Joanna' && $data['startRound'] === 3,
+    'rejected writes left the stored settings untouched',
+    $data,
+);
+
+// Leave the seeded DB in the shipped default state.
+$commish->post('/api/commish/voice', ['enabled' => false, 'voiceId' => 'Matthew', 'startRound' => 1, 'startPick' => 1]);
+
 // -------------------------------------------------------------- logout
 section('Logout');
 [$status] = $o1->post('/api/auth/logout');

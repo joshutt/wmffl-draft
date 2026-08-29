@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Draft Board with Announcer</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- AWS SDK for JavaScript v2 -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1093.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 p-4 md:p-8">
+
+<div class="w-full max-w-7xl mx-auto bg-white rounded-2xl shadow-lg p-8 space-y-6">
+    <div class="text-center">
+        <h1 class="text-3xl font-bold text-gray-800">Live Draft Board</h1>
+        <p class="text-gray-500 mt-2">Draft picks will appear below as they are made.</p>
+    </div>
+
+    <!-- --- Controls --- -->
+    <div class="flex flex-wrap gap-4 justify-center">
+        <input type="hidden" id="urlInput" value="services/picks">
+        <button id="togglePollingBtn"
+                class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Start Polling
+        </button>
+        <button onclick="fetchAndProcessPicks(true)"
+                class="px-4 py-2 font-semibold text-gray-700 bg-gray-200 rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+            Manual Refresh
+        </button>
+    </div>
+
+    <!-- --- Audio & AWS Configuration --- -->
+    <details class="bg-gray-50 rounded-lg p-4">
+        <summary class="font-semibold text-gray-700 cursor-pointer">Audio & AWS Configuration</summary>
+        <div class="mt-4 space-y-4">
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                <p class="text-sm text-blue-700">
+                    You must provide your Cognito Identity Pool ID and AWS Region for audio announcements to work.
+                    Audio must be enabled by clicking "Test Sound" first.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="identityPoolId" class="block text-sm font-medium text-gray-700">Cognito Identity Pool
+                        ID</label>
+                    <input type="text" id="identityPoolId"
+                           class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                           placeholder="us-east-1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                </div>
+                <div>
+                    <label for="awsRegion" class="block text-sm font-medium text-gray-700">AWS Region</label>
+                    <input type="text" id="awsRegion"
+                           class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                           placeholder="us-east-1">
+                </div>
+            </div>
+            <div>
+                <label for="voiceId" class="block text-sm font-medium text-gray-700">Choose a Voice</label>
+                <select id="voiceId"
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option>Joanna</option>
+                    <option>Matthew</option>
+                    <option>Ivy</option>
+                    <option>Justin</option>
+                    <option>Kendra</option>
+                    <option>Kimberly</option>
+                    <option>Salli</option>
+                    <option>Joey</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="testSoundButton"
+                        class="px-4 py-2 font-semibold text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Test Sound
+                </button>
+                <div id="audioStatus" class="text-sm text-gray-600 h-5"></div>
+            </div>
+            <div class="border-t pt-4">
+                <p class="text-sm text-gray-600 mb-2">In case of a page reload, set the starting point for new
+                    announcements.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="startRound" class="block text-sm font-medium text-gray-700">Start Announcements at
+                            Round</label>
+                        <input type="number" id="startRound"
+                               class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                               value="1" min="1">
+                    </div>
+                    <div>
+                        <label for="startPick" class="block text-sm font-medium text-gray-700">Start Announcements at
+                            Pick</label>
+                        <input type="number" id="startPick"
+                               class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                               value="1" min="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </details>
+    <!-- --- Draft Board --- -->
+    <h2 class="text-2xl font-bold text-center">Completed Picks</h2>
+    <div class="overflow-x-auto">
+        <table id="picks-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Round</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pick</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Franchise
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Player</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+            </tr>
+            </thead>
+            <tbody id="picks-table-body" class="bg-white divide-y divide-gray-200">
+            <!-- Pick rows will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- --- Status Section --- -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+        <div>
+            <h2 class="text-lg font-semibold">Polling Status</h2>
+            <pre id="pollingStatus" class="mt-1 text-gray-600">Stopped</pre>
+        </div>
+        <div>
+            <h2 class="text-lg font-semibold">Current Draft Status</h2>
+            <pre id="status" class="mt-1 text-gray-600 whitespace-pre-wrap"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- State Variables ---
+    const positionMap = {
+        'QB': 'Quarterback',
+        'RB': 'Running back',
+        'WR': 'Wide Receiver',
+        'TE': 'Tight End',
+        'K': 'Kicker',
+        'OL': 'Offensive Line',
+        'DL': 'Defensive Line',
+        'LB': 'Linebacker',
+        'DB': 'Defensive Back',
+        'HC': 'Head Coach'
+    };
+    const teamMap = {
+        // NFC East
+        'DAL': 'Dallas Cowboys',
+        'NYG': 'New York Giants',
+        'PHI': 'Philadelphia Eagles',
+        'WAS': 'Washington Commanders',
+        // NFC North
+        'CHI': 'Chicago Bears',
+        'DET': 'Detroit Lions',
+        'GB': 'Green Bay Packers',
+        'MIN': 'Minnesota Vikings',
+        // NFC South
+        'ATL': 'Atlanta Falcons',
+        'CAR': 'Carolina Panthers',
+        'NO': 'New Orleans Saints',
+        'TB': 'Tampa Bay Buccaneers',
+        // NFC West
+        'ARI': 'Arizona Cardinals',
+        'LAR': 'Los Angeles Rams',
+        'SF': 'San Francisco 49ers',
+        'SEA': 'Seattle Seahawks',
+        // AFC East
+        'BUF': 'Buffalo Bills',
+        'MIA': 'Miami Dolphins',
+        'NE': 'New England Patriots',
+        'NYJ': 'New York Jets',
+        // AFC North
+        'BAL': 'Baltimore Ravens',
+        'CIN': 'Cincinnati Bengals',
+        'CLE': 'Cleveland Browns',
+        'PIT': 'Pittsburgh Steelers',
+        // AFC South
+        'HOU': 'Houston Texans',
+        'IND': 'Indianapolis Colts',
+        'JAX': 'Jacksonville Jaguars',
+        'JAC': 'Jacksonville Jaguars',
+        'TEN': 'Tennessee Titans',
+        // AFC West
+        'DEN': 'Denver Broncos',
+        'KC': 'Kansas City Chiefs',
+        'LV': 'Las Vegas Raiders',
+        'LAC': 'Los Angeles Chargers'
+    };
+
+    let lastTimestamp = null;
+    let lastProcessedRound = 0;
+    let lastProcessedPick = 0;
+    let pollingIntervalId = null; // To hold the interval ID for starting/stopping
+    let audioContext;
+    let announcementQueue = [];
+    let isSpeaking = false;
+    let lastAnnouncedNextPickKey = null;
+
+    // --- DOM Element References ---
+    const toggleBtn = document.getElementById('togglePollingBtn');
+    const pollingStatusElement = document.getElementById('pollingStatus');
+    const testSoundButton = document.getElementById('testSoundButton');
+    const audioStatusDiv = document.getElementById('audioStatus');
+
+    // --- State Initialization ---
+    function initializeStateFromInputs() {
+        const startRound = parseInt(document.getElementById('startRound').value, 10) || 1;
+        const startPick = parseInt(document.getElementById('startPick').value, 10) || 1;
+
+        // Set the "last processed" state to be the pick right before the desired starting pick.
+        lastProcessedRound = startRound;
+        lastProcessedPick = startPick - 1;
+
+        // Also reset the "on the clock" announcement tracker
+        lastAnnouncedNextPickKey = null;
+    }
+
+
+    // --- Core Data Fetching & Processing ---
+    async function fetchAndProcessPicks(isManualRefresh = false) {
+        const url = document.getElementById('urlInput').value;
+
+        try {
+            const response = await fetch(url + '?t=' + new Date().getTime()); // Prevent caching
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const jsonData = await response.json();
+
+            if (!isManualRefresh && jsonData.timestamp && jsonData.timestamp === lastTimestamp) { // No new picks
+                // If there are no new picks and the announcement queue is clear,
+                // announce who is currently on the clock, but only once per turn.
+                if (!isSpeaking && announcementQueue.length === 0 && jsonData.nextPick && jsonData.nextPick.team) {
+                    const nextPickKey = `${jsonData.nextPick.round}-${jsonData.nextPick.pick}`; // e.g. "1-6"
+                    if (nextPickKey !== lastAnnouncedNextPickKey) {
+                        let announcement = `The ${jsonData.nextPick.team} are on the clock.`;
+                        if (jsonData.onDeckPick && jsonData.onDeckPick.franchise) {
+                            announcement += ` The ${jsonData.onDeckPick.franchise.name} are on deck.`;
+                        }
+                        speakText(announcement);
+                        lastAnnouncedNextPickKey = nextPickKey;
+                    }
+                }
+                return; // No new picks to process, so we are done.
+            }
+
+            const tableBody = document.getElementById('picks-table-body');
+            if (isManualRefresh) {
+                initializeStateFromInputs();
+                tableBody.innerHTML = '';
+            }
+
+            // When new data arrives, reset the "on the clock" announcement key
+            // so it can be announced again after the new picks are processed.
+            lastAnnouncedNextPickKey = null;
+
+            lastTimestamp = jsonData.timestamp;
+            const picks = jsonData.picks;
+            const statusElement = document.getElementById('status');
+
+            if (!picks) {
+                statusElement.textContent = 'Could not find "picks" in the JSON data.';
+                return;
+            }
+
+            const roundNumbers = Object.keys(picks).sort((a, b) => parseInt(a) - parseInt(b));
+
+            for (const roundNumber of roundNumbers) {
+                const round = picks[roundNumber];
+                const pickNumbers = Object.keys(round).sort((a, b) => parseInt(a) - parseInt(b));
+                const lastPickOfThisRound = pickNumbers[pickNumbers.length - 1];
+
+                for (const pickNumber of pickNumbers) {
+                    const pickData = round[pickNumber];
+                    if (pickData.player) {
+                        const player = pickData.player;
+                        const franchise = pickData.franchise;
+
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        const rowId = `pick-${roundNumber}-${pickNumber}`;
+
+                        // --- DISPLAY LOGIC ---
+                        // Always add the row to the table if it doesn't exist. This makes the display idempotent.
+                        if (document.getElementById(rowId)) {
+                            // This row is already on the board, but we continue to check for announcement.
+                        } else {
+                            row.id = rowId;
+
+                            const roundCell = document.createElement('td');
+                            roundCell.className = 'px-6 py-4 whitespace-nowrap';
+                            roundCell.textContent = pickData.round;
+                            row.appendChild(roundCell);
+
+                            const pickCell = document.createElement('td');
+                            pickCell.className = 'px-6 py-4 whitespace-nowrap';
+                            pickCell.textContent = pickData.pick;
+                            row.appendChild(pickCell);
+
+                            const franchiseCell = document.createElement('td');
+                            franchiseCell.className = 'px-6 py-4 whitespace-nowrap font-medium';
+                            franchiseCell.textContent = franchise.name;
+                            row.appendChild(franchiseCell);
+
+                            const playerCell = document.createElement('td');
+                            playerCell.className = 'px-6 py-4 whitespace-nowrap font-bold';
+                            playerCell.textContent = player.name;
+                            row.appendChild(playerCell);
+
+                            const teamCell = document.createElement('td');
+                            teamCell.className = 'px-6 py-4 whitespace-nowrap';
+                            teamCell.textContent = player.team;
+                            row.appendChild(teamCell);
+
+                            const posCell = document.createElement('td');
+                            posCell.className = 'px-6 py-4 whitespace-nowrap';
+                            posCell.textContent = player.pos;
+                            row.appendChild(posCell);
+
+                            tableBody.appendChild(row);
+
+                            // Scroll to the status section at the bottom so the user sees the latest pick and status
+                            statusElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        }
+
+                        // --- ANNOUNCEMENT LOGIC ---
+                        // Check if this pick is newer than the last one we announced.
+                        const isNewerThanLastProcessed = parseInt(roundNumber) > lastProcessedRound ||
+                            (parseInt(roundNumber) === lastProcessedRound && parseInt(pickNumber) > lastProcessedPick);
+
+                        if (isNewerThanLastProcessed) {
+                            const positionFullName = positionMap[player.pos] || player.pos;
+                            let announcement = `The ${franchise.name} select: ${player.name}, ${positionFullName}`;
+                            if (player.team && player.pos !== 'OL') {
+                                const teamFullName = teamMap[player.team] || player.team;
+                                announcement += `, from the ${teamFullName}.`;
+                            } else {
+                                announcement += '.';
+                            }
+                            speakText(announcement);
+
+                            // Update our state to reflect the last pick we announced
+                            lastProcessedRound = parseInt(roundNumber);
+                            lastProcessedPick = parseInt(pickNumber);
+
+                            if (pickNumber === lastPickOfThisRound) {
+                                speakText(`End of Round ${roundNumber}.`);
+                            }
+                        }
+                    } else {
+                        // Stop processing this round if a player is null (pick hasn't been made)
+                        // and move to the next round in the data, if any.
+                        break;
+                    }
+                }
+            }
+
+            // Update the status section
+            let statusText = 'Awaiting next pick...';
+            if (jsonData.nextPick && jsonData.nextPick.team) {
+                statusText += `Next Pick: ${jsonData.nextPick.team}\n`;
+            }
+            if (jsonData.onDeckPick && jsonData.onDeckPick.franchise) {
+                statusText += `On Deck: ${jsonData.onDeckPick.franchise.name}\n`;
+            }
+            statusElement.textContent = statusText;
+
+        } catch (error) {
+            console.error('Processing error:', error);
+            document.getElementById('status').textContent = `Error: ${error.message}`;
+        }
+    }
+
+    // --- Amazon Polly & Audio Functions ---
+    function initAudioContext() {
+        if (audioContext) return true; // Already initialized
+        try {
+            // Create and unlock the audio context, which is required by modern browsers.
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            console.log("AudioContext initialized.");
+            return true;
+        } catch (e) {
+            updateAudioStatus('Error: Web Audio API is not supported.', true);
+            console.error("Could not create AudioContext", e);
+            return false;
+        }
+    }
+
+    function playTestSound() {
+        if (!initAudioContext()) return;
+        const oscillator = audioContext.createOscillator();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+        oscillator.connect(audioContext.destination);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.5);
+        updateAudioStatus("Played test beep.", false);
+    }
+
+    function speakText(text) {
+        announcementQueue.push(text);
+        processAnnouncementQueue();
+    }
+
+    function processAnnouncementQueue() {
+        if (isSpeaking || announcementQueue.length === 0) {
+            return; // Don't start if already speaking or queue is empty
+        }
+        if (!initAudioContext()) {
+            console.log("Audio context not ready, clearing queue.");
+            announcementQueue = []; // Clear queue if audio can't be initialized
+            return;
+        }
+
+        isSpeaking = true;
+        const textToSpeak = announcementQueue.shift();
+
+        const voiceId = document.getElementById('voiceId').value;
+        const identityPoolId = document.getElementById('identityPoolId').value;
+        const awsRegion = document.getElementById('awsRegion').value;
+
+        if (!identityPoolId || !awsRegion) {
+            updateAudioStatus('Skipping: AWS config missing.', true);
+            isSpeaking = false;
+            processAnnouncementQueue(); // Try next item
+            return;
+        }
+
+        updateAudioStatus('Synthesizing announcement...');
+
+        AWS.config.region = awsRegion;
+        AWS.config.credentials = new AWS.CognitoIdentityCredentials({IdentityPoolId: identityPoolId});
+        AWS.config.credentials.get(function (err) {
+            if (err) {
+                updateAudioStatus(`Error: ${err.message}`, true);
+                isSpeaking = false;
+                processAnnouncementQueue();
+                return;
+            }
+
+            const polly = new AWS.Polly({apiVersion: '2016-06-10'});
+            const params = {Text: textToSpeak, OutputFormat: 'mp3', VoiceId: voiceId, Engine: 'neural'};
+
+            polly.synthesizeSpeech(params, (err, data) => {
+                if (err) {
+                    updateAudioStatus(`Error: ${err.message}`, true);
+                } else if (data && data.AudioStream) {
+                    audioContext.decodeAudioData(data.AudioStream.buffer, (audioBuffer) => {
+                        const source = audioContext.createBufferSource();
+                        source.buffer = audioBuffer;
+                        source.connect(audioContext.destination);
+                        source.start(0);
+                        updateAudioStatus('Playing announcement...', false);
+                        source.onended = () => {
+                            updateAudioStatus('Finished announcement.', false);
+                            isSpeaking = false;
+                            processAnnouncementQueue(); // Process next item in queue
+                        };
+                    }, (decodeError) => {
+                        updateAudioStatus('Error: Could not decode audio.', true);
+                        // FIX: The queue would stall here on a decode error.
+                        isSpeaking = false;
+                        processAnnouncementQueue();
+                    });
+                } else {
+                    updateAudioStatus('Error: No audio stream in response.', true);
+                }
+                // If there was an error or no audio stream, allow the queue to proceed
+                if (err || !data || !data.AudioStream) {
+                    isSpeaking = false;
+                    processAnnouncementQueue();
+                }
+            });
+        });
+    }
+
+    function updateAudioStatus(message, isError = false) {
+        audioStatusDiv.textContent = message;
+        audioStatusDiv.className = isError ? 'text-sm text-red-600 h-5' : 'text-sm text-gray-600 h-5';
+    }
+
+
+    // --- Polling Logic ---
+    toggleBtn.addEventListener('click', () => {
+        if (pollingIntervalId) {
+            // If polling is active, stop it
+            clearInterval(pollingIntervalId);
+            pollingIntervalId = null;
+            toggleBtn.textContent = 'Start Polling';
+            pollingStatusElement.textContent = 'Stopped';
+        } else {
+            // If polling is stopped, start it
+            initializeStateFromInputs();
+            fetchAndProcessPicks(); // Perform an initial fetch immediately
+            pollingIntervalId = setInterval(fetchAndProcessPicks, 5000); // Poll every 5 seconds
+            toggleBtn.textContent = 'Stop Polling';
+            pollingStatusElement.textContent = 'Running...';
+        }
+    });
+
+    // --- Event Listeners ---
+    testSoundButton.addEventListener('click', playTestSound);
+
+
+</script>
+
+</div>
+</body>
+</html>

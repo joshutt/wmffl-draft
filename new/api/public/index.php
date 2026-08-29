@@ -9,6 +9,7 @@ use App\Http\Controllers\CommishController;
 use App\Http\Controllers\DraftController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\RosterController;
+use App\Http\Controllers\VoiceController;
 use App\Http\Response;
 use App\Http\Router;
 use App\Http\Session;
@@ -68,6 +69,13 @@ $router->post('/commish/clock/stop', $commish->stopClock(...));
 $router->post('/commish/pick/auto', $commish->autoPick(...));
 $router->post('/commish/pick/undo', $commish->undoPick(...));
 $router->post('/commish/hangout-url', $commish->setHangoutUrl(...));
+
+// Voice announcer settings — read by the /announcer page, written by the
+// commish console's panel. Commish-gated because the response carries the
+// Cognito pool ID (docs/voice-announce-spec.md §4.4).
+$voice = new VoiceController();
+$router->get('/commish/voice', $voice->show(...));
+$router->post('/commish/voice', $voice->update(...));
 
 // Auto-draft priority lists — replaces nothing legacy, new for
 // docs/auto-draft-spec.md §7
